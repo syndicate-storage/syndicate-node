@@ -1,11 +1,18 @@
 # syndicate-node
 
+Prerequisite
+------------
+
+This package requires [Syndicate core package](https://github.com/syndicate-storage/syndicate-core) installed.
+
+
 Install
 -------
 
-If you are installing the package from the source and want to install as global (so that the package gets accessible from other Node.js modules), type following:
+If you are installing the package from the Git, type following:
 
 ```
-sudo npm install -g syndicate-drive
+npm install git://github.com/syndicate-storage/syndicate-node.git
 ```
+
 
