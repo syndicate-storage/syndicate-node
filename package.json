@@ -1,64 +1,67 @@
 {
-    "name": "syndicate",
-    "version": "0.1.0",
-    "description": "A node.js binding for Syndicate",
-    "keywords": [
-            "syndicate",
-            "fs",
-            "filesystem"
-        ],
-    "homepage": "https://github.com/syndicate-storage/",
-    "author": {
-            "name": "Illyoung Choi",
-            "email": "iychoi@email.arizona.edu",
-            "url": "https://github.com/syndicate-storage/syndicate-node.git"
-        },
-    "bugs": {
-            "url": "https://github.com/syndicate-storage/syndicate-node.git",
-            "email": "iychoi@email.arizona.edu"
-        },
-    "license": "Apache-2.0",
-    "repository": {
-            "type": "git",
-            "url": "https://github.com/syndicate-storage/syndicate-node.git"
-        },
-    "dependencies": {
-            "ref": "latest",
-            "ffi": "latest",
-            "ref-struct": "latest",
-            "ref-array": "latest"
-        },
-    "devDependencies": {},
-    "bundleDependencies": [],
-    "optionalDependencies": {},
-    "contributors": [
-            {
-                "name": "Illyoung Choi",
-                "email": "iychoi@email.arizona.edu"
-            }
-        ],
-    "engine": {
-            "node": ">=0.6"
-        },
-    "engines": {
-            "node": "*"
-        },
-    "os": ["!win32"],
-    "_engineSupported": true,
-    "scripts": {},
-    "_npmUser": {
-            "name": "Illyoung Choi",
-            "email": "iychoi@email.arizona.edu"
-        },
-    "_id": "syndicate@0.1.0",
-    "noAnalyze": true,
-    "_npmVersion": "1.1.12",
-    "_defaultLoaded": true,
-    "_from": "syndicate",
-    "main": "syndicate.js",
-    "files": [
-        "libsyndicate.js",
-        "posix_error.js",
-        "syndicate.js"
-        ]
+  "name": "syndicate-drive",
+  "version": "0.1.2",
+  "description": "A node.js binding for Syndicate drive",
+  "keywords": [
+    "syndicate",
+    "syndicate-drive",
+    "fs",
+    "filesystem"
+  ],
+  "homepage": "https://github.com/syndicate-storage/",
+  "author": {
+    "name": "Illyoung Choi",
+    "email": "iychoi@email.arizona.edu",
+    "url": "https://github.com/syndicate-storage/syndicate-node.git"
+  },
+  "bugs": {
+    "url": "https://github.com/syndicate-storage/syndicate-node.git",
+    "email": "iychoi@email.arizona.edu"
+  },
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/syndicate-storage/syndicate-node.git"
+  },
+  "dependencies": {
+    "ref": "latest",
+    "ffi": "latest",
+    "ref-struct": "latest",
+    "ref-array": "latest"
+  },
+  "devDependencies": {},
+  "bundleDependencies": [],
+  "optionalDependencies": {},
+  "contributors": [
+    {
+      "name": "Illyoung Choi",
+      "email": "iychoi@email.arizona.edu"
+    }
+  ],
+  "engine": {
+    "node": ">=0.6"
+  },
+  "engines": {
+    "node": "*"
+  },
+  "os": [
+    "!win32"
+  ],
+  "_engineSupported": true,
+  "scripts": {},
+  "_npmUser": {
+    "name": "Illyoung Choi",
+    "email": "iychoi@email.arizona.edu"
+  },
+  "_id": "syndicate-drive@0.1.0",
+  "noAnalyze": true,
+  "_npmVersion": "1.1.12",
+  "_defaultLoaded": true,
+  "_from": "syndicate-drive",
+  "main": "syndicate.js",
+  "files": [
+    "libsyndicate.js",
+    "posix_errors.js",
+    "syndicate.js"
+  ]
 }

@@ -114,7 +114,7 @@ module.exports = {
             throw "Invalid arguments";
         }
 
-        var entry = libsyndicate_node.helpers.helpers.create_md_entry();
+        var entry = libsyndicate_node.helpers.create_md_entry();
         // load up...
         var rc = libsyndicate_ug.UG_stat_raw(ug, path, entry.ref());
         if(rc !== 0) {

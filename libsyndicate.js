@@ -332,7 +332,7 @@ var libsyndicate_ug = newLibrary('/usr/local/lib/libsyndicate-ug', {
     "UG_closedir": ["int", [UG_statePtr, UG_handle_tPtr]],
     "UG_free_dir_listing": ["void", [md_entryPtrPtr]],
     // high-level xattr API
-    "UG_setxattr": ["int", [UG_statePtr, "string", "string", "string", "size_t", int]],
+    "UG_setxattr": ["int", [UG_statePtr, "string", "string", "string", "size_t", "int"]],
     "UG_getxattr": ["int", [UG_statePtr, "string", "string", "string", "size_t"]],
     "UG_listxattr": ["int", [UG_statePtr, "string", "string", "size_t"]],
     "UG_removexattr": ["int", [UG_statePtr, "string", "string"]],
