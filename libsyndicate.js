@@ -367,6 +367,9 @@ module.exports = {
         SEEK_SET: 0,
         SEEK_CUR: 1,
         SEEK_END: 2,
+        XATTR_CREATE_IF_NOT_EXISTS: 0,
+        XATTR_CREATE: 1,
+        XATTR_REPLACE: 2,
     }
 };
 

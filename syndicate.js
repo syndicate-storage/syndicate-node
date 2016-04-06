@@ -437,7 +437,7 @@ module.exports = {
         }
         
         // get mask
-        mode = mode | (process.umask() & 0o0777);
+        mode = mode || (process.umask() & 0o0777);
 
         // mkdir
         var rc = libsyndicate_ug.UG_mkdir(ug, path, mode);
@@ -461,5 +461,141 @@ module.exports = {
             throw "Failed to rmdir '" + path + "': " + posixerr.strerror(-rc);
         }
     },
+    // listxattr
+    listxattr: function(ug, path) {
+        if(!ug) {
+            throw "Invalid arguments";
+        }
+
+        if(!path) {
+            throw "Invalid arguments";
+        }
+        
+        // check length
+        var dummy_buf = new Buffer(1);
+        if( dummy_buf.isNull() ) {
+            throw "Failed to create a buffer: Out of memory";
+        }
+        dummy_buf.type = ref.types.CString;
+
+        var len = libsyndicate_ug.UG_listxattr(ug, path, dummy_buf, 0);
+        if(len < 0) {
+            throw "Failed to listxattr '" + path + "' : " + posixerr.strerror(-len);
+        }
+
+        // make a read buffer
+        var read_buf = new Buffer(len);
+        if( read_buf.isNull() ) {
+            throw "Failed to create a buffer: Out of memory";
+        }
+        read_buf.type = ref.types.CString;
+
+        // getxattr
+        var rc = libsyndicate_ug.UG_listxattr(ug, path, read_buf, len);
+        if(rc < 0) {
+            throw "Failed to listxattr '" + path + "' : " + posixerr.strerror(-rc);
+        }
+
+        var xattrs = [];
+
+        // split with \0 
+        var i = 0;
+        var start_offset = 0;
+        for(i=0;i<rc;i++) {
+            if(read_buf[i] === 0) {
+                // null?
+                xattrs.push(read_buf.slice(start_offset, i + 1).toString());
+                start_offset = i + 1;
+            }
+        }
+
+        return xattrs;
+    },
+    // getxattr
+    getxattr: function(ug, path, key) {
+        if(!ug) {
+            throw "Invalid arguments";
+        }
+
+        if(!path) {
+            throw "Invalid arguments";
+        }
+
+        if(!key) {
+            throw "Invalid arguments";
+        }
+
+        // check length
+        var dummy_buf = new Buffer(1);
+        if( dummy_buf.isNull() ) {
+            throw "Failed to create a buffer: Out of memory";
+        }
+        dummy_buf.type = ref.types.CString;
+
+        var len = libsyndicate_ug.UG_getxattr(ug, path, key, dummy_buf, 0);
+        if(len < 0) {
+            throw "Failed to getxattr '" + path + "' key=" + key + " : " + posixerr.strerror(-len);
+        }
+
+        // make a read buffer
+        var read_buf = new Buffer(len);
+        if( read_buf.isNull() ) {
+            throw "Failed to create a buffer: Out of memory";
+        }
+        read_buf.type = ref.types.CString;
+
+        // getxattr
+        var rc = libsyndicate_ug.UG_getxattr(ug, path, key, read_buf, len);
+        if(rc < 0) {
+            throw "Failed to getxattr '" + path + "' key=" + key + " : " + posixerr.strerror(-rc);
+        }
+        return read_buf.slice(0, rc);
+    },
+    // setxattr
+    setxattr: function(ug, path, key, value) {
+        if(!ug) {
+            throw "Invalid arguments";
+        }
+
+        if(!path) {
+            throw "Invalid arguments";
+        }
+
+        if(!key) {
+            throw "Invalid arguments";
+        }
+
+        if(!value) {
+            throw "Invalid arguments";
+        }
+
+        var flag = libsyndicate_node.constants.XATTR_CREATE_IF_NOT_EXISTS;
+
+        // setxattr
+        var rc = libsyndicate_ug.UG_setxattr(ug, path, key, value, value.length, flag);
+        if(rc !== 0) {
+            throw "Failed to setxattr '" + path + "' key=" + key + ", value=" + value + " : " + posixerr.strerror(-rc);
+        }
+    },
+    // removexattr
+    removexattr: function(ug, path, key) {
+        if(!ug) {
+            throw "Invalid arguments";
+        }
+
+        if(!path) {
+            throw "Invalid arguments";
+        }
+
+        if(!key) {
+            throw "Invalid arguments";
+        }
+
+        // removexattr
+        var rc = libsyndicate_ug.UG_removexattr(ug, path, key);
+        if(rc !== 0) {
+            throw "Failed to removexattr '" + path + "' key=" + key + ": " + posixerr.strerror(-rc);
+        }
+    }
 };
 
