@@ -472,12 +472,6 @@ module.exports = {
         }
         
         // check length
-        var dummy_buf = new Buffer(1);
-        if( dummy_buf.isNull() ) {
-            throw "Failed to create a buffer: Out of memory";
-        }
-        dummy_buf.type = ref.types.CString;
-
         var len = libsyndicate_ug.UG_listxattr(ug, path, null, 0);
         if(len < 0) {
             throw "Failed to listxattr '" + path + "' : " + posixerr.strerror(-len);
@@ -530,15 +524,13 @@ module.exports = {
         }
 
         // check length
-        var dummy_buf = new Buffer(1);
-        if( dummy_buf.isNull() ) {
-            throw "Failed to create a buffer: Out of memory";
-        }
-        dummy_buf.type = ref.types.CString;
-
-        var len = libsyndicate_ug.UG_getxattr(ug, path, key, dummy_buf, 0);
+        var len = libsyndicate_ug.UG_getxattr(ug, path, key, null, 0);
         if(len < 0) {
             throw "Failed to getxattr '" + path + "' key=" + key + " : " + posixerr.strerror(-len);
+        }
+
+        if(len == 0) {
+            return null;
         }
 
         // make a read buffer
