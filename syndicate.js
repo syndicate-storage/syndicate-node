@@ -478,9 +478,13 @@ module.exports = {
         }
         dummy_buf.type = ref.types.CString;
 
-        var len = libsyndicate_ug.UG_listxattr(ug, path, dummy_buf, 0);
+        var len = libsyndicate_ug.UG_listxattr(ug, path, null, 0);
         if(len < 0) {
             throw "Failed to listxattr '" + path + "' : " + posixerr.strerror(-len);
+        }
+
+        if(len == 0) {
+            return [];
         }
 
         // make a read buffer
