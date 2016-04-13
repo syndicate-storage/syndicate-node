@@ -462,7 +462,7 @@ module.exports = {
         }
     },
     // listxattr
-    listxattr: function(ug, path) {
+    list_xattr: function(ug, path) {
         if(!ug) {
             throw "Invalid arguments";
         }
@@ -510,7 +510,7 @@ module.exports = {
         return xattrs;
     },
     // getxattr
-    getxattr: function(ug, path, key) {
+    get_xattr: function(ug, path, key) {
         if(!ug) {
             throw "Invalid arguments";
         }
@@ -548,7 +548,7 @@ module.exports = {
         return read_buf.slice(0, rc);
     },
     // setxattr
-    setxattr: function(ug, path, key, value) {
+    set_xattr: function(ug, path, key, value) {
         if(!ug) {
             throw "Invalid arguments";
         }
@@ -574,7 +574,7 @@ module.exports = {
         }
     },
     // removexattr
-    removexattr: function(ug, path, key) {
+    remove_xattr: function(ug, path, key) {
         if(!ug) {
             throw "Invalid arguments";
         }
