@@ -34,12 +34,31 @@ var size_tPtr = ref.refType("size_t");
 var stringPtr = ref.refType("string");
 var stringArr = ArrayType("string");
 var voidPtr = ref.refType("void");
+var fsblkcnt_t = "uint64";
+var fsfilcnt_t = "uint64";
+var dev_t = "uint64";
+var ino_t = "uint64";
 
 // C data types
+var statvfs = Struct({
+    "f_bsize": "uint64", // Filesystem block size
+    "f_frsize": "uint64", // Fragment size
+    "f_blocks": fsblkcnt_t, // Size of fs in f_frsize units
+    "f_bfree": fsblkcnt_t, // Number of free blocks
+    "f_bavail": fsblkcnt_t, // Number of free blocks for unprivileged users
+    "f_files": fsfilcnt_t, // Number of inodes
+    "f_ffree": fsfilcnt_t, // Number of free inodes
+    "f_favail": fsfilcnt_t, // Number of free inodes for unprivileged users
+    "f_fsid": "uint64", // Filesystem ID
+    "f_flag": "uint64", // Mount flags
+    "f_namemax": "uint64", // Maximum filename length
+});
+var statvfsPtr = ref.refType(statvfs);
+
 /*
 var stat = Struct({
-    "st_dev": "uint64", // ID of device containing file - dev_t
-    "st_ino": "long", // inode number - ino_t
+    "st_dev": dev_t, // ID of device containing file - dev_t
+    "st_ino": ino_t, // inode number - ino_t
     "st_mode": mode_t, // protection - mode_t
     "st_nlink": "nlink_t", // number of hard links - nlink_t
     "st_uid": "uid_t", // user ID of owner - uid_t
@@ -55,7 +74,6 @@ var stat = Struct({
 });
 var statPtr = ref.refType(stat);
 */
-
 var O_RDONLY = 0;
 var O_WRONLY = 1;
 var O_RDWR = 2;
@@ -323,6 +341,7 @@ var libsyndicate_ug = newLibrary('/usr/local/lib/libsyndicate-ug', {
     /*
     int UG_fstat( struct UG_state* state, struct stat *statbuf, UG_handle_t *fi );
     */
+    "UG_statvfs": ["int", [UG_statePtr, statvfsPtr]],
     // high-level directory data API
     "UG_opendir": [UG_handle_tPtr, [UG_statePtr, "string", intPtr]],
     "UG_readdir": ["int", [UG_statePtr, md_entryPtrPtrPtr, "size_t", UG_handle_tPtr]],
@@ -353,6 +372,12 @@ module.exports = {
         },
         create_md_entry_ptr_ptr: function() {
             return ref.alloc(md_entryPtrPtr);
+        },
+        create_statvfs: function() {
+            return new statvfs();
+        },
+        create_statvfs_ptr: function() {
+            return ref.alloc(statvfsPtr);
         },
         create_integer: function() {
             return ref.alloc("int");

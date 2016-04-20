@@ -592,6 +592,23 @@ module.exports = {
         if(rc !== 0) {
             throw "Failed to removexattr '" + path + "' key=" + key + ": " + posixerr.strerror(-rc);
         }
+    },
+    // statvfs
+    statvfs: function(ug) {
+        if(!ug) {
+            throw "Invalid arguments";
+        }
+
+        // statvfs
+        var entry = libsyndicate_node.helpers.create_statvfs();
+        // load up...
+        var rc = libsyndicate_ug.UG_statvfs(ug, entry.ref());
+        if(rc !== 0) {
+            throw "Failed to statvfs: " + posixerr.strerror(-rc);
+        }
+
+        var statvfsEntry = JSON.parse(JSON.stringify(entry));
+        return statvfsEntry;
     }
 };
 
