@@ -740,6 +740,80 @@ module.exports = {
 
         return ret_buf.slice(0, size_read_total);
     },
+    // read async.
+    read_async: function(ug, fh, size, callback) {
+        if(!ug) {
+            callback("Invalid arguments", null);
+            return;
+        }
+
+        if(!fh) {
+            callback("Invalid arguments", null);
+            return;
+        }
+
+        if(size < 0) {
+            callback("Invalid arguments", null);
+            return;
+        }
+
+        // make a return buffer
+        var ret_buf = new Buffer(size);
+        if( ret_buf.isNull() ) {
+            throw "Failed to create a buffer: Out of memory";
+        }
+        ret_buf.type = ref.types.CString;
+
+        // make a read buffer
+        var read_buf = new Buffer(size);
+        if( read_buf.isNull() ) {
+            throw "Failed to create a buffer: Out of memory";
+        }
+        read_buf.type = ref.types.CString;
+
+        // READ
+        var size_left = size;
+        var size_read_total = 0;
+        var stopWhile = false;
+        async.whilst(
+            function() {
+                return size_left > 0 && !stopWhile;
+            },
+            function(loop_cb) {
+                libsyndicate_ug.UG_read.async(ug, read_buf, size_left, fh, function(err, size_read) {
+                    if(err) {
+                        stopWhile = true;
+                        loop_cb(err, null);
+                        return;
+                    }
+
+                    if(size_read < 0) {
+                        stopWhile = true;
+                        loop_cb("Failed to read a file '" + fh + "': " + posixerr.strerror(-size_read), null);
+                        return;
+                    } else if(size_read === 0) {
+                        // EOF
+                        stopWhile = true;
+                        loop_cb(null, null);
+                        return;
+                    } else {
+                        read_buf.copy(ret_buf, size_read_total, 0, size_read);
+                        size_left -= size_read;
+                        size_read_total += size_read;
+                    }
+                });
+            },
+            function(err, data) {
+                if(err) {
+                    callback(err, null);
+                    return;
+                }
+
+                callback(null, ret_buf.slice(0, size_read_total));
+                return;
+            }
+        );
+    },
     // write
     write: function(ug, fh, buf) {
         if(!ug) {
@@ -758,7 +832,7 @@ module.exports = {
         var size_left = buf.length;
         var size_write_total = 0;
         while(size_left > 0) {
-            var size_write = libsyndicate_ug.UG_write(ug, read_buf, size_left, fh);
+            var size_write = libsyndicate_ug.UG_write(ug, buf, size_left, fh);
             if(size_write < 0) {
                 throw "Failed to write a file '" + fh + "': " + posixerr.strerror(-size_write);
             } else {
@@ -768,6 +842,60 @@ module.exports = {
         }
 
         return size_write_total;
+    },
+    // write async.
+    write_async: function(ug, fh, buf, callback) {
+        if(!ug) {
+            callback("Invalid arguments", null);
+            return;
+        }
+
+        if(!fh) {
+            callback("Invalid arguments", null);
+            return;
+        }
+
+        if(!buf) {
+            callback("Invalid arguments", null);
+            return;
+        }
+
+        // WRITE
+        var size_left = buf.length;
+        var size_write_total = 0;
+        var stopWhile = false;
+        async.whilst(
+            function() {
+                return size_left > 0 && !stopWhile;
+            },
+            function(loop_cb) {
+                libsyndicate_ug.UG_write.async(ug, buf, size_left, fh, function(err, size_write) {
+                    if(err) {
+                        stopWhile = true;
+                        loop_cb(err, null);
+                        return;
+                    }
+
+                    if(size_write < 0) {
+                        stopWhile = true;
+                        loop_cb("Failed to write a file '" + fh + "': " + posixerr.strerror(-size_write), null);
+                        return;
+                    } else {
+                        size_left -= size_write;
+                        size_write_total += size_write;
+                    }
+                });
+            },
+            function(err, data) {
+                if(err) {
+                    callback(err, null);
+                    return;
+                }
+
+                callback(null, size_write_total);
+                return;
+            }
+        );
     },
     // rename
     rename: function(ug, src_path, dest_path) {
