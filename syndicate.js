@@ -24,6 +24,7 @@ var libsyndicate_ug = libsyndicate_node.libsyndicate_ug;
 var posixerr = require('./posix_errors.js');
 
 var ref = require('ref');
+var async = require('async');
 
 function addRawStatHelpers(entry) {
     entry.isFile = function() {
@@ -125,6 +126,37 @@ module.exports = {
         addRawStatHelpers(statEntry);
         return statEntry;
     },
+    // stat-raw async
+    stat_raw_async: function(ug, path, callback) {
+        if(!ug) {
+            callback("Invalid arguments", null);
+            return;
+        }
+
+        if(!path) {
+            callback("Invalid arguments", null);
+            return;
+        }
+
+        var entry = libsyndicate_node.helpers.create_md_entry();
+        // load up...
+        libsyndicate_ug.UG_stat_raw.async(ug, path, entry.ref(), function(err, rc) {
+            if(err) {
+                callback(err, null);
+                return;
+            }
+
+            if(rc !== 0) {
+                callback("Failed to stat '" + path + "': " + posixerr.strerror(-rc), null);
+                return;
+            }
+
+            var statEntry = JSON.parse(JSON.stringify(entry));
+            addRawStatHelpers(statEntry);
+            callback(null, statEntry);
+            return;
+        });
+    },
     // list-dir
     list_dir: function(ug, path) {
         if(!ug) {
@@ -185,6 +217,114 @@ module.exports = {
         }
 
         return entries;
+    },
+    // list-dir async.
+    list_dir_async: function(ug, path, callback) {
+        if(!ug) {
+            callback("Invalid arguments", null);
+            return;
+        }
+
+        if(!path) {
+            callback("Invalid arguments", null);
+            return;
+        }
+
+        var rc2 = libsyndicate_node.helpers.create_integer();
+        
+        async.waterfall([
+            function(cb) {
+                libsyndicate_ug.UG_opendir.async(ug, path, rc2, function(err, dirh) {
+                    if(err) {
+                        cb(err, null);
+                        return;
+                    }
+
+                    if(dirh.isNull()) {
+                        cb("Failed to open directory '" + path + "': " + posixerr.strerror(-rc2.deref()), null);
+                        return;
+                    }
+
+                    cb(null, dirh);
+                });
+            },
+            function(dirh, cb) {
+                var entries = [];
+
+                var stopWhile = false;
+                async.whilst(
+                    function() {
+                        return !stopWhile;
+                    },
+                    function(loop_cb) {
+                        var dirents = libsyndicate_node.helpers.create_md_entry_ptr_ptr();
+                        libsyndicate_ug.UG_readdir.async(ug, dirents, 1, dirh, function(err, rc) {
+                            if(err) {
+                                stopWhile = true;
+                                loop_cb(err, null);
+                                return;
+                            }
+
+                            if(rc !== 0) {
+                                stopWhile = true;
+                                loop_cb("Failed to read directory '" + path + "': " + posixerr.strerror(-rc), null);
+                                return;
+                            }
+
+                            var dirents_d = dirents.deref();
+                            if(!dirents_d.isNull()) {
+                                var dirents_d = dirents.deref();
+                                var entry = ref.get(dirents_d, 0, ref.types.pointer);
+                                if(entry.isNull()) {
+                                    // EOF 
+                                    libsyndicate_ug.UG_free_dir_listing(dirents_d);
+                                    stopWhile = true;
+                                    loop_cb(null, null);
+                                    return;
+                                }
+
+                                var j = 0;
+                                while(!entry.isNull()) {
+                                    var statEntry = JSON.parse(JSON.stringify(entry.deref()));
+                                    addRawStatHelpers(statEntry);
+                                    entries.push(statEntry);
+
+                                    j++;
+                                    entry = ref.get(dirents_d, ref.sizeof.pointer * j, ref.types.pointer);
+                                }
+                                
+                                libsyndicate_ug.UG_free_dir_listing(dirents_d);
+                                loop_cb(null, null);
+                                return;
+                            } else {
+                                // no data
+                                stopWhile = true;
+                                loop_cb(null, null);
+                                return;
+                            }
+                        });
+                    },
+                    function(err, data) {
+                        libsyndicate_ug.UG_closedir.async(ug, dirh, function(cerr, rc) {
+                            if(cerr) {
+                                cb(cerr, null);
+                                return;
+                            }
+
+                            if(rc !== 0) {
+                                cb("Failed to close directory '" + path + "': " + posixerr.strerror(-rc), null);
+                                return;
+                            }
+
+                            cb(err, entries);
+                            return;
+                        });
+                    }
+                );
+            }
+        ], function(err, result) {
+            callback(err, result);
+        });
     },
     // open
     open: function(ug, path, flag) {

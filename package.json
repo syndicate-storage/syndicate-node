@@ -27,7 +27,8 @@
     "ref": "latest",
     "ffi": "latest",
     "ref-struct": "latest",
-    "ref-array": "latest"
+    "ref-array": "latest",
+    "async": "latest"
   },
   "devDependencies": {},
   "bundleDependencies": [],
