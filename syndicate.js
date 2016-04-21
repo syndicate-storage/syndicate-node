@@ -403,6 +403,158 @@ module.exports = {
         }
         return fh;
     },
+    // open async.
+    open_async: function(ug, path, flag, callback) {
+        if(!ug) {
+            callback("Invalid arguments", null);
+            return;
+        }
+
+        if(!path) {
+            callback("Invalid arguments", null);
+            return;
+        }
+
+        var seek_to_end = false;
+        var create = false;
+        var truncate = false;
+        if(flag === "r") {
+            flag = libsyndicate_node.constants.O_RDONLY;
+            seek_to_end = false;
+            create = false;
+            truncate = false;
+        } else if(flag === "w") {
+            flag = libsyndicate_node.constants.O_WRONLY;
+            seek_to_end = false;
+            create = true;
+            truncate = true;
+        } else if(flag === "a") {
+            flag = libsyndicate_node.constants.O_RDWR;
+            seek_to_end = true;
+            create = true;
+            truncate = false;
+        } else {
+            flag = libsyndicate_node.constants.O_RDONLY;
+            seek_to_end = false;
+            create = false;
+            truncate = false;
+        }
+
+        var rc = 0;
+        var rc2 = libsyndicate_node.helpers.create_integer();
+        if(create) {
+            libsyndicate_ug.UG_create.async(ug, path, 0o0540, rc2, function(err, fh) {
+                if(err) {
+                    callback(err, null);
+                    return;
+                }
+
+                if(rc2.deref() !== 0) {
+                    if(rc2.deref() !== -17) {
+                        // Not EEXIST
+                        callback("Failed to create a file '" + path + "': " + posixerr.strerror(-rc2.deref()), null);
+                        return;
+                    } else {
+                        // EEXIST
+                        libsyndicate_ug.UG_open.async(ug, path, flag, rc2, function(err, fh) {
+                            if(err) {
+                                callback(err, null);
+                                return;
+                            }
+
+                            if(rc2.deref() !== 0) {
+                                callback("Failed to open a file '" + path + "': " + posixerr.strerror(-rc2.deref()), null);
+                                return;
+                            }
+
+                            async.waterfall([
+                                function(cb) {
+                                    if(truncate) {
+                                        libsyndicate_ug.UG_ftruncate.async(ug, 0, fh, function(err, rc) {
+                                            if(err) {
+                                                cb(err, null);
+                                                return;
+                                            }
+
+                                            if(rc !== 0) {
+                                                libsyndicate_ug.UG_close.async(ug, fh, function(err, data) {
+                                                    if(err) {
+                                                        cb(err, null);
+                                                        return;
+                                                    }
+
+                                                    cb("Failed to truncate a file '" + path + "': " + posixerr.strerror(-rc), null);
+                                                    return;
+                                                });
+                                            } else {
+                                                cb(null, fh);
+                                                return;
+                                            }
+                                        });
+                                    } else {
+                                        cb(null, fh);
+                                        return;
+                                    }
+                                },
+                                function(cb, fh) {
+                                    if(seek_to_end) {
+                                        // SEEK
+                                        libsyndicate_ug.UG_seek.async(fh, 0, libsyndicate_node.constants.SEEK_END, function(err, new_offset) {
+                                            if(err) {
+                                                cb(err, null);
+                                                return;
+                                            }
+
+                                            if(new_offset < 0) {
+                                                libsyndicate_ug.UG_close.async(ug, fh, function(err, data) {
+                                                    if(err) {
+                                                        cb(err, null);
+                                                        return;
+                                                    }
+
+                                                    cb("Failed to seek a file '" + path + "': " + posixerr.strerror(-new_offset), null);
+                                                    return;
+                                                });
+                                            }
+                                            cb(null, fh);
+                                            return;
+                                        });
+                                    } else {
+                                        cb(null, fh);
+                                        return;
+                                    }
+                                }
+                            ],
+                            function(err, fh) {
+                                if(err) {
+                                    callback(err, null);
+                                    return;
+                                }
+                    
+                                callback(err, fh);
+                                return;
+                            });
+                        });
+                    }
+                }
+            });
+        } else {
+            libsyndicate_ug.UG_open.async(ug, path, flag, rc2, function(err, fh) {
+                if(err) {
+                    callback(err, null);
+                    return;
+                }
+
+                if(rc2.deref() !== 0) {
+                    callback("Failed to open a file '" + path + "': " + posixerr.strerror(-rc2.deref()), null);
+                    return;
+                }
+
+                callback(err, fh);
+                return;
+            });
+        }
+    },
     // close
     close: function(ug, fh) {
         if(!ug) {
@@ -418,6 +570,33 @@ module.exports = {
             throw "Failed to close a file '" + fh + "': " + posixerr.strerror(-rc);
         }
     },
+    // close async.
+    close_async: function(ug, fh, callback) {
+        if(!ug) {
+            callback("Invalid arguments", null);
+            return;
+        }
+
+        if(!path) {
+            callback("Invalid arguments", null);
+            return;
+        }
+
+        libsyndicate_ug.UG_close.async(ug, fh, function(err, rc) {
+            if(err) {
+                callback(err, null);
+                return;
+            }
+
+            if(rc !== 0) {
+                callback("Failed to close a file '" + fh + "': " + posixerr.strerror(-rc), null);
+                return;
+            }
+    
+            callback(null, null);
+            return;
+        });
+    },
     // fsync
     fsync: function(ug, fh) {
         if(!ug) {
@@ -432,6 +611,33 @@ module.exports = {
         if(rc !== 0) {
             throw "Failed to sync a file '" + fh + "': " + posixerr.strerror(-rc);
         }
+    },
+    // fsync async
+    fsync_async: function(ug, fh, callback) {
+        if(!ug) {
+            callback("Invalid arguments", null);
+            return;
+        }
+
+        if(!path) {
+            callback("Invalid arguments", null);
+            return;
+        }
+
+        libsyndicate_ug.UG_fsync.async(ug, fh, function(err, rc) {
+            if(err) {
+                callback(err, null);
+                return;
+            }
+
+            if(rc !== 0) {
+                callback("Failed to sync a file '" + fh + "': " + posixerr.strerror(-rc), null);
+                return;
+            }
+    
+            callback(null, null);
+            return;
+        });
     },
     // seek
     seek: function(ug, fh, offset) {
@@ -453,6 +659,39 @@ module.exports = {
             throw "Failed to seek a file '" + fh + "': " + posixerr.strerror(-new_offset);
         }
         return new_offset;
+    },
+    // seek async.
+    seek_async: function(ug, fh, offset, callback) {
+        if(!ug) {
+            callback("Invalid arguments", null);
+            return;
+        }
+
+        if(!path) {
+            callback("Invalid arguments", null);
+            return;
+        }
+
+        if(offset < 0) {
+            callback("Invalid arguments", null);
+            return;
+        }
+
+        // seek
+        libsyndicate_ug.UG_seek.async(fh, offset, libsyndicate_node.constants.SEEK_SET, function(err, new_offset) {
+            if(err) {
+                callback(err, null);
+                return;
+            }
+
+            if(new_offset < 0) {
+                callback("Failed to seek a file '" + fh + "': " + posixerr.strerror(-new_offset), null);
+                return;
+            }
+    
+            callback(null, new_offset);
+            return;
+        });
     },
     // read
     read: function(ug, fh, size) {
@@ -550,6 +789,39 @@ module.exports = {
             throw "Failed to rename '" + src_path + " to " + dest_path + "': " + posixerr.strerror(-rc);
         }
     },
+    // rename async.
+    rename_async: function(ug, src_path, dest_path, callback) {
+        if(!ug) {
+            callback("Invalid arguments", null);
+            return;
+        }
+
+        if(!src_path) {
+            callback("Invalid arguments", null);
+            return;
+        }
+
+        if(!dest_path) {
+            callback("Invalid arguments", null);
+            return;
+        }
+
+        // rename
+        libsyndicate_ug.UG_rename.async(ug, src_path, dest_path, function(err, rc) {
+            if(err) {
+                callback(err, null);
+                return;
+            }
+
+            if(rc !== 0) {
+                callback("Failed to rename '" + src_path + " to " + dest_path + "': " + posixerr.strerror(-rc), null);
+                return;
+            }
+    
+            callback(null, null);
+            return;
+        });
+    },
     // unlink
     unlink: function(ug, path) {
         if(!ug) {
@@ -565,6 +837,34 @@ module.exports = {
         if(rc !== 0) {
             throw "Failed to unlink '" + path + "': " + posixerr.strerror(-rc);
         }
+    },
+    // unlink async.
+    unlink_async: function(ug, path, callback) {
+        if(!ug) {
+            callback("Invalid arguments", null);
+            return;
+        }
+
+        if(!path) {
+            callback("Invalid arguments", null);
+            return;
+        }
+
+        // unlink
+        libsyndicate_ug.UG_unlink.async(ug, path, function(err, rc) {
+            if(err) {
+                callback(err, null);
+                return;
+            }
+
+            if(rc !== 0) {
+                callback("Failed to unlink '" + path + "': " + posixerr.strerror(-rc), null);
+                return;
+            }
+    
+            callback(null, null);
+            return;
+        });
     },
     // mkdir
     mkdir: function(ug, path, mode) {
@@ -585,6 +885,37 @@ module.exports = {
             throw "Failed to mkdir '" + path + "': " + posixerr.strerror(-rc);
         }
     },
+    // mkdir async.
+    mkdir_async: function(ug, path, mode, callback) {
+        if(!ug) {
+            callback("Invalid arguments", null);
+            return;
+        }
+
+        if(!path) {
+            callback("Invalid arguments", null);
+            return;
+        }
+
+        // get mask
+        mode = mode || (process.umask() & 0o0777);
+
+        // mkdir
+        libsyndicate_ug.UG_mkdir.async(ug, path, mode, function(err, rc) {
+            if(err) {
+                callback(err, null);
+                return;
+            }
+
+            if(rc !== 0) {
+                callback("Failed to mkdir '" + path + "': " + posixerr.strerror(-rc), null);
+                return;
+            }
+    
+            callback(null, null);
+            return;
+        });
+    },
     // rmdir
     rmdir: function(ug, path) {
         if(!ug) {
@@ -600,6 +931,34 @@ module.exports = {
         if(rc !== 0) {
             throw "Failed to rmdir '" + path + "': " + posixerr.strerror(-rc);
         }
+    },
+    // rmdir async.
+    rmdir_async: function(ug, path, callback) {
+        if(!ug) {
+            callback("Invalid arguments", null);
+            return;
+        }
+
+        if(!path) {
+            callback("Invalid arguments", null);
+            return;
+        }
+
+        // rmdir
+        libsyndicate_ug.UG_rmdir.async(ug, path, function(err, rc) {
+            if(err) {
+                callback(err, null);
+                return;
+            }
+
+            if(rc !== 0) {
+                callback("Failed to rmdir '" + path + "': " + posixerr.strerror(-rc), null);
+                return;
+            }
+    
+            callback(null, null);
+            return;
+        });
     },
     // listxattr
     list_xattr: function(ug, path) {
@@ -649,6 +1008,73 @@ module.exports = {
 
         return xattrs;
     },
+    // listxattr async.
+    list_xattr_async: function(ug, path, callback) {
+        if(!ug) {
+            callback("Invalid arguments", null);
+            return;
+        }
+
+        if(!path) {
+            callback("Invalid arguments", null);
+            return;
+        }
+        
+        // check length
+        libsyndicate_ug.UG_listxattr.async(ug, path, null, 0, function(err, len) {
+            if(err) {
+                callback(err, null);
+                return;
+            }
+
+            if(len < 0) {
+                callback("Failed to listxattr '" + path + "' : " + posixerr.strerror(-len), null);
+                return;
+            }
+
+            if(len == 0) {
+                callback(null, []);
+                return;
+            }
+
+            // make a read buffer
+            var read_buf = new Buffer(len);
+            if( read_buf.isNull() ) {
+                callback("Failed to create a buffer: Out of memory", null);
+                return;
+            }
+            read_buf.type = ref.types.CString;
+
+            // getxattr
+            libsyndicate_ug.UG_listxattr.async(ug, path, read_buf, len, function(err, rc) {
+                if(err) {
+                    callback(err, null);
+                    return;
+                }
+
+                if(rc < 0) {
+                    callback("Failed to listxattr '" + path + "' : " + posixerr.strerror(-rc), null);
+                    return;
+                }
+
+                var xattrs = [];
+
+                // split with \0 
+                var i = 0;
+                var start_offset = 0;
+                for(i=0;i<rc;i++) {
+                    if(read_buf[i] === 0) {
+                        // null?
+                        xattrs.push(read_buf.slice(start_offset, i + 1).toString());
+                        start_offset = i + 1;
+                    }
+                }
+
+                callback(null, xattrs);
+                return;
+            });
+        });
+    },
     // getxattr
     get_xattr: function(ug, path, key) {
         if(!ug) {
@@ -687,6 +1113,65 @@ module.exports = {
         }
         return read_buf.slice(0, rc);
     },
+    // getxattr async.
+    get_xattr_async: function(ug, path, key, callback) {
+        if(!ug) {
+            callback("Invalid arguments", null);
+            return;
+        }
+
+        if(!path) {
+            callback("Invalid arguments", null);
+            return;
+        }
+
+        if(!key) {
+            callback("Invalid arguments", null);
+            return;
+        }
+        
+        // check length
+        libsyndicate_ug.UG_getxattr.async(ug, path, key, null, 0, function(err, len) {
+            if(err) {
+                callback(err, null);
+                return;
+            }
+
+            if(len < 0) {
+                callback("Failed to getxattr '" + path + "' key=" + key + " : " + posixerr.strerror(-len), null);
+                return;
+            }
+
+            if(len == 0) {
+                callback(null, null);
+                return;
+            }
+
+            // make a read buffer
+            var read_buf = new Buffer(len);
+            if( read_buf.isNull() ) {
+                callback("Failed to create a buffer: Out of memory", null);
+                return;
+            }
+            read_buf.type = ref.types.CString;
+
+            // getxattr
+            libsyndicate_ug.UG_getxattr.async(ug, path, key, read_buf, len, function(err, rc) {
+                if(err) {
+                    callback(err, null);
+                    return;
+                }
+
+                if(rc < 0) {
+                    callback("Failed to getxattr '" + path + "' key=" + key + " : " + posixerr.strerror(-rc), null);
+                    return;
+                }
+
+                callback(null, read_buf.slice(0, rc));
+                return;
+            });
+        });
+    },
     // setxattr
     set_xattr: function(ug, path, key, value) {
         if(!ug) {
@@ -713,6 +1198,46 @@ module.exports = {
             throw "Failed to setxattr '" + path + "' key=" + key + ", value=" + value + " : " + posixerr.strerror(-rc);
         }
     },
+    // setxattr async.
+    set_xattr_async: function(ug, path, key, value, callback) {
+        if(!ug) {
+            callback("Invalid arguments", null);
+            return;
+        }
+
+        if(!path) {
+            callback("Invalid arguments", null);
+            return;
+        }
+
+        if(!key) {
+            callback("Invalid arguments", null);
+            return;
+        }
+
+        if(!value) {
+            callback("Invalid arguments", null);
+            return;
+        }
+
+        var flag = libsyndicate_node.constants.XATTR_CREATE_IF_NOT_EXISTS;
+        
+        // setxattr
+        libsyndicate_ug.UG_setxattr.async(ug, path, key, value, value.length, flag, function(err, rc) {
+            if(err) {
+                callback(err, null);
+                return;
+            }
+
+            if(rc !== 0) {
+                callback("Failed to setxattr '" + path + "' key=" + key + ", value=" + value + " : " + posixerr.strerror(-rc), null);
+                return;
+            }
+
+            callback(null, null);
+            return;
+        });
+    },
     // removexattr
     remove_xattr: function(ug, path, key) {
         if(!ug) {
@@ -733,6 +1258,39 @@ module.exports = {
             throw "Failed to removexattr '" + path + "' key=" + key + ": " + posixerr.strerror(-rc);
         }
     },
+    // removexattr async.
+    remove_xattr_async: function(ug, path, key, callback) {
+        if(!ug) {
+            callback("Invalid arguments", null);
+            return;
+        }
+
+        if(!path) {
+            callback("Invalid arguments", null);
+            return;
+        }
+
+        if(!key) {
+            callback("Invalid arguments", null);
+            return;
+        }
+
+        // removexattr
+        libsyndicate_ug.UG_removexattr.async(ug, path, key, function(err, rc) {
+            if(err) {
+                callback(err, null);
+                return;
+            }
+
+            if(rc !== 0) {
+                callback("Failed to removexattr '" + path + "' key=" + key + ": " + posixerr.strerror(-rc), null);
+                return;
+            }
+
+            callback(null, null);
+            return;
+        });
+    },
     // statvfs
     statvfs: function(ug) {
         if(!ug) {
@@ -749,6 +1307,33 @@ module.exports = {
 
         var statvfsEntry = JSON.parse(JSON.stringify(entry));
         return statvfsEntry;
-    }
+    },
+    // statvfs async.
+    statvfs_async: function(ug, callback) {
+        if(!ug) {
+            callback("Invalid arguments", null);
+            return;
+        }
+
+        // statvfs
+        var entry = libsyndicate_node.helpers.create_statvfs();
+
+        // load up...
+        libsyndicate_ug.UG_statvfs(ug, entry.ref(), function(err, rc) {
+            if(err) {
+                callback(err, null);
+                return;
+            }
+
+            if(rc !== 0) {
+                callback("Failed to statvfs: " + posixerr.strerror(-rc), null);
+                return;
+            }
+        
+            var statvfsEntry = JSON.parse(JSON.stringify(entry));
+            callback(null, statvfsEntry);
+            return;
+        });
+    },
 };
 
