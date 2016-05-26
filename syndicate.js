@@ -1228,7 +1228,7 @@ module.exports = {
         }
 
         // make a read buffer
-        var read_buf = new Buffer(len);
+        var read_buf = new Buffer(len + 2);
         if( read_buf.isNull() ) {
             throw "Failed to create a buffer: Out of memory";
         }
@@ -1276,7 +1276,7 @@ module.exports = {
             }
 
             // make a read buffer
-            var read_buf = new Buffer(len);
+            var read_buf = new Buffer(len + 2);
             if( read_buf.isNull() ) {
                 callback("Failed to create a buffer: Out of memory", null);
                 return;
@@ -1447,7 +1447,7 @@ module.exports = {
         var entry = libsyndicate_node.helpers.create_statvfs();
 
         // load up...
-        libsyndicate_ug.UG_statvfs(ug, entry.ref(), function(err, rc) {
+        libsyndicate_ug.UG_statvfs.async(ug, entry.ref(), function(err, rc) {
             if(err) {
                 callback(err, null);
                 return;
