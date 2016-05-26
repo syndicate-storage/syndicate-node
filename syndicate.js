@@ -67,7 +67,7 @@ module.exports = {
 
         // build syndicate arguments
         var args=[];
-        // program name: 
+        // program name:
         args.push("libsyndicate-node.js");
 
         // user: -u flag
@@ -89,7 +89,7 @@ module.exports = {
         if(opts.anonymous) {
             args.push("-A");
         }
-        
+
         var ug = libsyndicate_ug.UG_init(args.length, args, opts.anonymous);
         if(ug.isNull()) {
             throw "UG_init failed";
@@ -183,13 +183,13 @@ module.exports = {
                 libsyndicate_ug.UG_closedir(ug, dirh);
                 throw "Failed to read directory '" + path + "': " + posixerr.strerror(-rc);
             }
-            
+
             var dirents_d = dirents.deref();
             if(!dirents_d.isNull()) {
                 var dirents_d = dirents.deref();
                 var entry = ref.get(dirents_d, 0, ref.types.pointer);
                 if(entry.isNull()) {
-                    // EOF 
+                    // EOF
                     libsyndicate_ug.UG_free_dir_listing(dirents_d);
                     break;
                 }
@@ -203,14 +203,14 @@ module.exports = {
                     j++;
                     entry = ref.get(dirents_d, ref.sizeof.pointer * j, ref.types.pointer);
                 }
-                
+
                 libsyndicate_ug.UG_free_dir_listing(dirents_d);
             } else {
                 // no data
                 break;
             }
         }
-        
+
         rc = libsyndicate_ug.UG_closedir(ug, dirh);
         if(rc !== 0) {
             throw "Failed to close directory '" + path + "': " + posixerr.strerror(-rc);
@@ -231,7 +231,7 @@ module.exports = {
         }
 
         var rc2 = libsyndicate_node.helpers.create_integer();
-        
+
         async.waterfall([
             function(cb) {
                 libsyndicate_ug.UG_opendir.async(ug, path, rc2, function(err, dirh) {
@@ -276,7 +276,7 @@ module.exports = {
                                 var dirents_d = dirents.deref();
                                 var entry = ref.get(dirents_d, 0, ref.types.pointer);
                                 if(entry.isNull()) {
-                                    // EOF 
+                                    // EOF
                                     libsyndicate_ug.UG_free_dir_listing(dirents_d);
                                     stopWhile = true;
                                     loop_cb(null, null);
@@ -292,7 +292,7 @@ module.exports = {
                                     j++;
                                     entry = ref.get(dirents_d, ref.sizeof.pointer * j, ref.types.pointer);
                                 }
-                                
+
                                 libsyndicate_ug.UG_free_dir_listing(dirents_d);
                                 loop_cb(null, null);
                                 return;
@@ -365,8 +365,8 @@ module.exports = {
         var rc2 = libsyndicate_node.helpers.create_integer();
         var fh;
         if(create) {
-            fh = libsyndicate_ug.UG_create(ug, path, 0o0540, rc2);   
-            if(rc2.deref() !== 0) { 
+            fh = libsyndicate_ug.UG_create(ug, path, 0o0540, rc2);
+            if(rc2.deref() !== 0) {
                 if(rc2.deref() !== -17) {
                     // Not EEXIST
                     throw "Failed to create a file '" + path + "': " + posixerr.strerror(-rc2.deref());
@@ -530,7 +530,7 @@ module.exports = {
                                     callback(err, null);
                                     return;
                                 }
-                    
+
                                 callback(err, fh);
                                 return;
                             });
@@ -592,7 +592,7 @@ module.exports = {
                 callback("Failed to close a file '" + fh + "': " + posixerr.strerror(-rc), null);
                 return;
             }
-    
+
             callback(null, null);
             return;
         });
@@ -634,7 +634,7 @@ module.exports = {
                 callback("Failed to sync a file '" + fh + "': " + posixerr.strerror(-rc), null);
                 return;
             }
-    
+
             callback(null, null);
             return;
         });
@@ -688,7 +688,7 @@ module.exports = {
                 callback("Failed to seek a file '" + fh + "': " + posixerr.strerror(-new_offset), null);
                 return;
             }
-    
+
             callback(null, new_offset);
             return;
         });
@@ -945,7 +945,7 @@ module.exports = {
                 callback("Failed to rename '" + src_path + " to " + dest_path + "': " + posixerr.strerror(-rc), null);
                 return;
             }
-    
+
             callback(null, null);
             return;
         });
@@ -989,7 +989,7 @@ module.exports = {
                 callback("Failed to unlink '" + path + "': " + posixerr.strerror(-rc), null);
                 return;
             }
-    
+
             callback(null, null);
             return;
         });
@@ -1003,7 +1003,7 @@ module.exports = {
         if(!path) {
             throw "Invalid arguments";
         }
-        
+
         // get mask
         mode = mode || (process.umask() & 0o0777);
 
@@ -1039,7 +1039,7 @@ module.exports = {
                 callback("Failed to mkdir '" + path + "': " + posixerr.strerror(-rc), null);
                 return;
             }
-    
+
             callback(null, null);
             return;
         });
@@ -1083,7 +1083,7 @@ module.exports = {
                 callback("Failed to rmdir '" + path + "': " + posixerr.strerror(-rc), null);
                 return;
             }
-    
+
             callback(null, null);
             return;
         });
@@ -1097,7 +1097,7 @@ module.exports = {
         if(!path) {
             throw "Invalid arguments";
         }
-        
+
         // check length
         var len = libsyndicate_ug.UG_listxattr(ug, path, null, 0);
         if(len < 0) {
@@ -1109,7 +1109,7 @@ module.exports = {
         }
 
         // make a read buffer
-        var read_buf = new Buffer(len);
+        var read_buf = new Buffer(len + 2);
         if( read_buf.isNull() ) {
             throw "Failed to create a buffer: Out of memory";
         }
@@ -1123,7 +1123,7 @@ module.exports = {
 
         var xattrs = [];
 
-        // split with \0 
+        // split with \0
         var i = 0;
         var start_offset = 0;
         for(i=0;i<rc;i++) {
@@ -1147,7 +1147,7 @@ module.exports = {
             callback("Invalid arguments", null);
             return;
         }
-        
+
         // check length
         libsyndicate_ug.UG_listxattr.async(ug, path, null, 0, function(err, len) {
             if(err) {
@@ -1166,7 +1166,7 @@ module.exports = {
             }
 
             // make a read buffer
-            var read_buf = new Buffer(len);
+            var read_buf = new Buffer(len + 2);
             if( read_buf.isNull() ) {
                 callback("Failed to create a buffer: Out of memory", null);
                 return;
@@ -1187,7 +1187,7 @@ module.exports = {
 
                 var xattrs = [];
 
-                // split with \0 
+                // split with \0
                 var i = 0;
                 var start_offset = 0;
                 for(i=0;i<rc;i++) {
@@ -1257,7 +1257,7 @@ module.exports = {
             callback("Invalid arguments", null);
             return;
         }
-        
+
         // check length
         libsyndicate_ug.UG_getxattr.async(ug, path, key, null, 0, function(err, len) {
             if(err) {
@@ -1349,7 +1349,7 @@ module.exports = {
         }
 
         var flag = libsyndicate_node.constants.XATTR_CREATE_IF_NOT_EXISTS;
-        
+
         // setxattr
         libsyndicate_ug.UG_setxattr.async(ug, path, key, value, value.length, flag, function(err, rc) {
             if(err) {
@@ -1457,11 +1457,10 @@ module.exports = {
                 callback("Failed to statvfs: " + posixerr.strerror(-rc), null);
                 return;
             }
-        
+
             var statvfsEntry = JSON.parse(JSON.stringify(entry));
             callback(null, statvfsEntry);
             return;
         });
     },
 };
-
