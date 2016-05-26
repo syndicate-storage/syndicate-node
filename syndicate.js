@@ -1113,6 +1113,7 @@ module.exports = {
         if( read_buf.isNull() ) {
             throw "Failed to create a buffer: Out of memory";
         }
+        read_buf.fill(0);
         read_buf.type = ref.types.CString;
 
         // getxattr
@@ -1171,6 +1172,7 @@ module.exports = {
                 callback("Failed to create a buffer: Out of memory", null);
                 return;
             }
+            read_buf.fill(0);
             read_buf.type = ref.types.CString;
 
             // getxattr
@@ -1232,6 +1234,7 @@ module.exports = {
         if( read_buf.isNull() ) {
             throw "Failed to create a buffer: Out of memory";
         }
+        read_buf.fill(0);
         read_buf.type = ref.types.CString;
 
         // getxattr
@@ -1239,7 +1242,7 @@ module.exports = {
         if(rc < 0) {
             throw "Failed to getxattr '" + path + "' key=" + key + " : " + posixerr.strerror(-rc);
         }
-        return read_buf.slice(0, rc);
+        return read_buf.toString();
     },
     // getxattr async.
     get_xattr_async: function(ug, path, key, callback) {
@@ -1281,6 +1284,7 @@ module.exports = {
                 callback("Failed to create a buffer: Out of memory", null);
                 return;
             }
+            read_buf.fill(0);
             read_buf.type = ref.types.CString;
 
             // getxattr
@@ -1295,7 +1299,7 @@ module.exports = {
                     return;
                 }
 
-                callback(null, read_buf.slice(0, rc));
+                callback(null, read_buf.toString());
                 return;
             });
         });
