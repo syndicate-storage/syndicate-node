@@ -1130,7 +1130,9 @@ module.exports = {
         for(i=0;i<rc;i++) {
             if(read_buf[i] === 0) {
                 // null?
-                xattrs.push(read_buf.slice(start_offset, i + 1).toString());
+                if(i > start_offset) {
+                    xattrs.push(read_buf.toString('ascii', start_offset, i));
+                }
                 start_offset = i + 1;
             }
         }
@@ -1175,7 +1177,7 @@ module.exports = {
             read_buf.fill(0);
             read_buf.type = ref.types.CString;
 
-            // getxattr
+            // listxattr
             libsyndicate_ug.UG_listxattr.async(ug, path, read_buf, len, function(err, rc) {
                 if(err) {
                     callback(err, null);
@@ -1195,7 +1197,9 @@ module.exports = {
                 for(i=0;i<rc;i++) {
                     if(read_buf[i] === 0) {
                         // null?
-                        xattrs.push(read_buf.slice(start_offset, i + 1).toString());
+                        if(i > start_offset) {
+                            xattrs.push(read_buf.toString('ascii', start_offset, i));
+                        }
                         start_offset = i + 1;
                     }
                 }
@@ -1242,7 +1246,7 @@ module.exports = {
         if(rc < 0) {
             throw "Failed to getxattr '" + path + "' key=" + key + " : " + posixerr.strerror(-rc);
         }
-        return read_buf.toString();
+        return read_buf.toString().replace(/\0/g, '');
     },
     // getxattr async.
     get_xattr_async: function(ug, path, key, callback) {
@@ -1299,7 +1303,7 @@ module.exports = {
                     return;
                 }
 
-                callback(null, read_buf.toString());
+                callback(null, read_buf.toString().replace(/\0/g, ''));
                 return;
             });
         });
