@@ -46,17 +46,19 @@ function addRawStatHelpers(entry) {
  */
 module.exports = {
     // create init opts
-    create_opts: function(user, volume, gateway, anonymous) {
+    create_opts: function(user, volume, gateway, anonymous, debug_level) {
         user = user || "";
         volume = volume || "";
         gateway = gateway || "";
         anonymous = anonymous || false;
+        debug_level = debug_level || 0;
 
         return {
             user: user,
             volume: volume,
             gateway: gateway,
-            anonymous: anonymous
+            anonymous: anonymous,
+            debug_level: debug_level
         };
     },
     // initialize UG
