@@ -89,6 +89,10 @@ module.exports = {
         if(opts.anonymous) {
             args.push("-A");
         }
+        // debug_level: -d flag
+        if(opts.debug_level != 0) {
+            args.push("-d" + opts.debug_level);
+        }
 
         var ug = libsyndicate_ug.UG_init(args.length, args, opts.anonymous);
         if(ug.isNull()) {
