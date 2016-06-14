@@ -14,6 +14,8 @@
    limitations under the License.
 */
 
+var syndicateerr = require('./errors.js');
+
 /**
  * POSIX ERROR CODES
  */
@@ -520,62 +522,62 @@ var ERROR_CODE_TABLE = [
     },
     {
     code: "ECONNABORTED",
-    errno: 103, 
+    errno: 103,
     description: "Software caused connection abort"
     },
     {
     code: "ECONNRESET",
-    errno: 104, 
+    errno: 104,
     description: "Connection reset by peer"
     },
     {
     code: "ENOBUFS",
-    errno: 105, 
+    errno: 105,
     description: "No buffer space available"
     },
     {
     code: "EISCONN",
-    errno: 106, 
+    errno: 106,
     description: "Transport endpoint is already connected"
     },
     {
     code: "ENOTCONN",
-    errno: 107, 
+    errno: 107,
     description: "Transport endpoint is not connected"
     },
     {
     code: "ESHUTDOWN",
-    errno: 108, 
+    errno: 108,
     description: "Cannot send after transport endpoint shutdown"
     },
     {
     code: "ETOOMANYREFS",
-    errno: 109, 
+    errno: 109,
     description: "Too many references: cannot splice"
     },
     {
     code: "ETIMEDOUT",
-    errno: 110, 
+    errno: 110,
     description: "Connection timed out"
     },
     {
     code: "ECONNREFUSED",
-    errno: 111, 
+    errno: 111,
     description: "Connection refused"
     },
     {
     code: "EHOSTDOWN",
-    errno: 112, 
+    errno: 112,
     description: "Host is down"
     },
     {
     code: "EHOSTUNREACH",
-    errno: 113, 
+    errno: 113,
     description: "No route to host"
     },
     {
     code: "EALREADY",
-    errno: 114, 
+    errno: 114,
     description: "Operation already in progress"
     },
     {
@@ -585,42 +587,42 @@ var ERROR_CODE_TABLE = [
     },
     {
     code: "ESTALE",
-    errno: 116, 
+    errno: 116,
     description: "Stale NFS file handle"
     },
     {
     code: "EUCLEAN",
-    errno: 117, 
+    errno: 117,
     description: "Structure needs cleaning"
     },
     {
     code: "ENOTNAM",
-    errno: 118, 
+    errno: 118,
     description: "Not a XENIX named type file"
     },
     {
     code: "ENAVAIL",
-    errno: 119, 
+    errno: 119,
     description: "No XENIX semaphores available"
     },
     {
     code: "EISNAM",
-    errno: 120, 
+    errno: 120,
     description: "Is a named type file"
     },
     {
     code: "EREMOTEIO",
-    errno: 121, 
+    errno: 121,
     description: "Remote I/O error"
     },
     {
     code: "EDQUOT",
-    errno: 122, 
+    errno: 122,
     description: "Quota exceeded"
     },
     {
     code: "ENOMEDIUM",
-    errno: 123, 
+    errno: 123,
     description: "No medium found"
     },
     {
@@ -630,12 +632,12 @@ var ERROR_CODE_TABLE = [
     },
     {
     code: "ECANCELED",
-    errno: 125, 
+    errno: 125,
     description: "Operation Canceled"
     },
     {
     code: "ENOKEY",
-    errno: 126, 
+    errno: 126,
     description: "Required key not available"
     },
     {
@@ -650,12 +652,12 @@ var ERROR_CODE_TABLE = [
     },
     {
     code: "EKEYREJECTED",
-    errno: 129, 
+    errno: 129,
     description: "Key was rejected by service"
     },
     {
     code: "EOWNERDEAD",
-    errno: 130, 
+    errno: 130,
     description: "Owner died"
     },
     {
@@ -682,6 +684,14 @@ module.exports = {
         } else {
             return "UNKNOWN ERROR - " + error_code;
         }
+    },
+    create_error: function(message, error_code) {
+        var msg = message + " > ";
+        if( ERRNO_TABLE[error_code] ) {
+            msg += ERRNO_TABLE[error_code].description;
+        } else {
+            msg += "UNKNOWN ERROR - " + error_code;
+        }
+        return new syndicateerr.SyndicateError(msg, error_code);
     }
 };
-

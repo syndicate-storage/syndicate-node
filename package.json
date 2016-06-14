@@ -62,6 +62,7 @@
   "main": "syndicate.js",
   "files": [
     "libsyndicate.js",
+    "errors.js",
     "posix_errors.js",
     "syndicate.js"
   ]
