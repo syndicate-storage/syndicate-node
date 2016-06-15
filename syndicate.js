@@ -584,7 +584,7 @@ module.exports = {
             return;
         }
 
-        if(!path) {
+        if(!fh) {
             callback(new Error("Invalid arguments"), null);
             return;
         }
@@ -674,7 +674,7 @@ module.exports = {
             return;
         }
 
-        if(!path) {
+        if(!fh) {
             callback(new Error("Invalid arguments"), null);
             return;
         }
