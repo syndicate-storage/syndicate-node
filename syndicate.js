@@ -807,6 +807,8 @@ module.exports = {
                         read_buf.copy(ret_buf, size_read_total, 0, size_read);
                         size_left -= size_read;
                         size_read_total += size_read;
+                        loop_cb(null, null);
+                        return;
                     }
                 });
             },
@@ -890,6 +892,8 @@ module.exports = {
                     } else {
                         size_left -= size_write;
                         size_write_total += size_write;
+                        loop_cb(null, null);
+                        return;
                     }
                 });
             },
