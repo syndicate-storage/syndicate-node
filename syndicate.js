@@ -112,6 +112,19 @@ module.exports = {
         // shutdown UG
         libsyndicate_ug.UG_shutdown( ug );
     },
+    // get gateway
+    state_gateway: function(ug) {
+        if(!ug) {
+            throw new Error("Invalid arguments");
+        }
+
+        // shutdown UG
+        var gateway = libsyndicate_ug.UG_state_gateway( ug );
+        if(gateway.isNull()) {
+            throw new Error("UG_state_gateway failed");
+        }
+        return gateway;
+    },
     // stat-raw
     stat_raw: function(ug, path) {
         if(!ug) {
@@ -331,6 +344,55 @@ module.exports = {
             }
         ], function(err, result) {
             callback(err, result);
+        });
+    },
+    // create
+    create: function(ug, path, mode) {
+        if(!ug) {
+            throw new Error("Invalid arguments");
+        }
+
+        if(!path) {
+            throw new Error("Invalid arguments");
+        }
+
+        // get mask
+        mode = mode || (process.umask() & 0o0777);
+
+        var rc2 = libsyndicate_node.helpers.create_integer();
+        var fh = libsyndicate_ug.UG_create(ug, path, mode, rc2);
+        if(rc2.deref() !== 0) {
+            throw posixerr.create_error("Failed to create a file '" + path + "'", -rc2.deref());
+        } else {
+            return fh;
+        }
+    },
+    // create async.
+    create_async: function(ug, path, mode, callback) {
+        if(!ug) {
+            callback(new Error("Invalid arguments"), null);
+            return;
+        }
+
+        if(!path) {
+            callback(new Error("Invalid arguments"), null);
+            return;
+        }
+
+        // get mask
+        mode = mode || (process.umask() & 0o0777);
+
+        var rc2 = libsyndicate_node.helpers.create_integer();
+        libsyndicate_ug.UG_create.async(ug, path, mode, rc2, function(err, fh) {
+            if(err) {
+                callback(err, null);
+                return;
+            }
+
+            if(rc2.deref() !== 0) {
+                callback(posixerr.create_error("Failed to create a file '" + path + "'", -rc2.deref()), null);
+                return;
+            }
         });
     },
     // open
@@ -907,6 +969,59 @@ module.exports = {
                 return;
             }
         );
+    },
+    // truncate
+    truncate: function(ug, path, size) {
+        if(!ug) {
+            throw new Error("Invalid arguments");
+        }
+
+        if(!path) {
+            throw new Error("Invalid arguments");
+        }
+
+        if(size < 0) {
+            throw new Error("Invalid arguments");
+        }
+
+        // truncate
+        var rc = libsyndicate_ug.UG_truncate(ug, path, size);
+        if(rc !== 0) {
+            throw posixerr.create_error("Failed to truncate '" + path + "' to size " + size, -rc);
+        }
+    },
+    // truncate async.
+    truncate_async: function(ug, path, size, callback) {
+        if(!ug) {
+            callback(new Error("Invalid arguments"), null);
+            return;
+        }
+
+        if(!path) {
+            callback(new Error("Invalid arguments"), null);
+            return;
+        }
+
+        if(size < 0) {
+            callback(new Error("Invalid arguments"), null);
+            return;
+        }
+
+        // truncate
+        libsyndicate_ug.UG_truncate.async(ug, path, size, function(err, rc) {
+            if(err) {
+                callback(err, null);
+                return;
+            }
+
+            if(rc !== 0) {
+                callback(posixerr.create_error("Failed to truncate '" + path + "' to size " + size, -rc), null);
+                return;
+            }
+
+            callback(null, null);
+            return;
+        });
     },
     // rename
     rename: function(ug, src_path, dest_path) {
