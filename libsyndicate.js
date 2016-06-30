@@ -36,10 +36,22 @@ var stringArr = ArrayType("string");
 var voidPtr = ref.refType("void");
 var fsblkcnt_t = "uint64";
 var fsfilcnt_t = "uint64";
+var blksize_t = "uint64";
+var blkcnt_t = "uint64";
 var dev_t = "uint64";
 var ino_t = "uint64";
+var nlink_t = "uint64";
+var uid_t = "uint32";
+var gid_t = "uint32";
+var time_t = "uint64";
 
 // C data types
+var utimbuf = Struct({
+    "actime": time_t,  // access time (unused on FAT filesystems)
+    "modtime": time_t, // modification time
+});
+var utimbufPtr = ref.refType(utimbuf);
+
 var statvfs = Struct({
     "f_bsize": "uint64", // Filesystem block size
     "f_frsize": "uint64", // Fragment size
@@ -52,28 +64,27 @@ var statvfs = Struct({
     "f_fsid": "uint64", // Filesystem ID
     "f_flag": "uint64", // Mount flags
     "f_namemax": "uint64", // Maximum filename length
+    "unused": ArrayType("char", 24),
 });
 var statvfsPtr = ref.refType(statvfs);
 
-/*
 var stat = Struct({
-    "st_dev": dev_t, // ID of device containing file - dev_t
-    "st_ino": ino_t, // inode number - ino_t
-    "st_mode": mode_t, // protection - mode_t
-    "st_nlink": "nlink_t", // number of hard links - nlink_t
-    "st_uid": "uid_t", // user ID of owner - uid_t
-    "st_gid": "gid_t", // group ID of owner - gid_t
-    "st_rdev": "uint64", // device ID (if special file) - dev_t
-    "st_size": "off_t", // total size, in bytes
-
-    blksize_t st_blksize; // blocksize for file system I/O
-    blkcnt_t  st_blocks;  // number of 512B blocks allocated
-    time_t    st_atime;   // time of last access
-    time_t    st_mtime;   // time of last modification
-    time_t    st_ctime;   // time of last status change
+    "st_dev": dev_t, // ID of device containing file
+    "st_ino": ino_t, // inode number
+    "st_mode": mode_t, // protection
+    "st_nlink": nlink_t, // number of hard links
+    "st_uid": uid_t, // user ID of owner
+    "st_gid": gid_t, // group ID of owner
+    "st_rdev": dev_t, // device ID (if special file)
+    "st_size": off_t, // total size, in bytes
+    "st_blksize": blksize_t, // blocksize for file system I/O
+    "st_blocks": blkcnt_t, // number of 512B blocks allocated
+    "st_atime": time_t, // time of last access
+    "st_mtime": time_t, // time of last modification
+    "st_ctime": time_t, // time of last status change
 });
 var statPtr = ref.refType(stat);
-*/
+
 var O_RDONLY = 0;
 var O_WRONLY = 1;
 var O_RDWR = 2;
@@ -84,15 +95,15 @@ var SG_gatewayPtr = ref.refType("void");
 // global UG state
 var UG_state = Struct({
     "gateway": SG_gatewayPtr,              // reference to the gateway core (which, in turn, points to UG_state)
-   
+
     "replica_gateway_ids": uint64Ptr,      // IDs of replica gateways to replicate data to
 
     "num_replica_gateway_ids": "size_t",
 
-    //struct fskit_core* fs;               // filesystem core 
+    //struct fskit_core* fs;               // filesystem core
     "fs": "pointer",
 
-    //struct UG_vacuumer* vacuumer;        // vacuumer instance 
+    //struct UG_vacuumer* vacuumer;        // vacuumer instance
     "vacuumer": "pointer",
 
     //pthread_rwlock_t lock;               // lock governing access to this structure
@@ -111,7 +122,7 @@ var UG_state = Struct({
     "detach_rh": "int",
     "rename_rh": "int",
 
-    "running_thread": "bool",            // if true, we've set up and started a thread to run the main loop ourselves 
+    "running_thread": "bool",            // if true, we've set up and started a thread to run the main loop ourselves
     //pthread_t thread;                    // the main loop thread
     "thread": "pointer",
 
@@ -135,7 +146,7 @@ var md_opts = Struct({
     "debug_level": "int",
     "foreground": "bool",
 
-    // not set by the parser 
+    // not set by the parser
     "client": "bool",
     "ignore_driver": "bool", // if true, no attempt to load the driver will be made
     "gateway_type": "uint64",
@@ -176,7 +187,7 @@ var md_entry = Struct({
     "mtime_nsec": "int32", // last-modified time (nanoseconds)
     "manifest_mtime_sec": "int64", // manifest last-mod time (actual last-write time, regardless of utime) (seconds)
     "manifest_mtime_nsec": "int32", // manifest last-mod time (actual last-write time, regardless of utime) (nanoseconds)
-    "write_nonce": "int64", // last-write nonce 
+    "write_nonce": "int64", // last-write nonce
     "xattr_nonce": "int64", // xattr write nonce
     "version": "int64", // file version
     "max_read_freshness": "int32", // how long is this entry fresh until it needs revalidation?
@@ -191,11 +202,11 @@ var md_entry = Struct({
     "num_children": "int64", // number of children this entry has (if it's a directory)
     "capacity": "int64", // maximum index number a child can have (i.e. used by listdir())
     "ent_sig": "string", // signature over this entry from the coordinator, as well as any ancillary data below
-    "ent_sig_len": "size_t", 
+    "ent_sig_len": "size_t",
 
     // ancillary data: not always filled in
     "parent_id": "uint64", // id of this file's parent directory
-   
+
     // putxattr, removexattr only (and only from the coordinator)
     "xattr_hash": "string" // hash over (volume ID, file ID, xattr_nonce, sorted(xattr name, xattr value))
 });
@@ -248,7 +259,9 @@ var libsyndicate = newLibrary('/usr/local/lib/libsyndicate', {
     //////////////////////////////
     // FROM libsyndicate/gateway.h
     //////////////////////////////
-    "SG_gateway_first_arg_optind": ["int", [SG_gatewayPtr]]
+    "SG_gateway_id": ["uint64", [SG_gatewayPtr]],
+    "SG_gateway_user_id": ["uint64", [SG_gatewayPtr]],
+    "SG_gateway_first_arg_optind": ["int", [SG_gatewayPtr]],
 });
 var libsyndicate_ug = newLibrary('/usr/local/lib/libsyndicate-ug', {
     //////////////////////////////
@@ -267,13 +280,13 @@ var libsyndicate_ug = newLibrary('/usr/local/lib/libsyndicate-ug', {
     "UG_state_rlock": ["int", [UG_statePtr]],
     "UG_state_wlock": ["int", [UG_statePtr]],
     "UG_state_unlock": ["int", [UG_statePtr]],
-    // core init and shutdown 
+    // core init and shutdown
     "UG_init": [UG_statePtr, ["int", stringArr, "bool"]],
     "UG_init_ex": [UG_statePtr, ["int", stringArr, md_optsPtr, "pointer"]],
     "UG_start": ["int", [UG_statePtr]],
     "UG_main": ["int", [UG_statePtr]],
     "UG_shutdown": ["int", [UG_statePtr]],
-    // getters 
+    // getters
     "UG_state_gateway": [SG_gatewayPtr, [UG_statePtr]],
     "UG_state_fs": ["pointer", [UG_statePtr]], // returns struct fskit_core*
     "UG_state_vacuumer": ["pointer", [UG_statePtr]], // returns struct UG_vacuumer*
@@ -293,7 +306,7 @@ var libsyndicate_ug = newLibrary('/usr/local/lib/libsyndicate-ug', {
     "UG_state_sync_rh": ["int", [UG_statePtr]],
     "UG_state_detach_rh": ["int", [UG_statePtr]],
     "UG_state_rename_rh": ["int", [UG_statePtr]],
-    // setters 
+    // setters
     "UG_state_set_cls": ["void", [UG_statePtr, "pointer"]],
     "UG_state_set_stat_rh": ["int", [UG_statePtr, "int"]],
     "UG_state_set_creat_rh": ["int", [UG_statePtr, "int"]],
@@ -310,7 +323,7 @@ var libsyndicate_ug = newLibrary('/usr/local/lib/libsyndicate-ug', {
     // FROM libsyndicate-ug/client.h
     //////////////////////////////
     // high-level metadata API
-    //"UG_stat": ["int", [UG_statePtr, "string", struct stat *statbuf]],
+    "UG_stat": ["int", [UG_statePtr, "string", statPtr]],
     "UG_stat_raw": ["int", [UG_statePtr, "string", md_entryPtr]],
     "UG_mkdir": ["int", [UG_statePtr, "string", mode_t]],
     "UG_unlink": ["int", [UG_statePtr, "string"]],
@@ -318,10 +331,8 @@ var libsyndicate_ug = newLibrary('/usr/local/lib/libsyndicate-ug', {
     "UG_rename": ["int", [UG_statePtr, "string", "string"]],
     "UG_chmod": ["int", [UG_statePtr, "string", mode_t]],
     "UG_chown": ["int", [UG_statePtr, "string", "uint64"]],
-    /*
-    int UG_utime( struct UG_state* state, char const* path, struct utimbuf *ubuf );
-    int UG_chcoord( struct UG_state* state, char const* path, uint64_t* new_coordinator_response );
-    */
+    "UG_utime": ["int", [UG_statePtr, "string", utimbufPtr]],
+    "UG_chcoord": ["int", [UG_statePtr, "string", uint64Ptr]],
     "UG_truncate": ["int", [UG_statePtr, "string", off_t]],
     "UG_access": ["int", [UG_statePtr, "string", "int"]],
     "UG_invalidate": ["int", [UG_statePtr, "string"]],
@@ -338,9 +349,7 @@ var libsyndicate_ug = newLibrary('/usr/local/lib/libsyndicate-ug', {
     "UG_close": ["int", [UG_statePtr, UG_handle_tPtr]],
     "UG_fsync": ["int", [UG_statePtr, UG_handle_tPtr]],
     "UG_ftruncate": ["int", [UG_statePtr, off_t, UG_handle_tPtr]],
-    /*
-    int UG_fstat( struct UG_state* state, struct stat *statbuf, UG_handle_t *fi );
-    */
+    "UG_fstat": ["int", [UG_statePtr, statPtr, UG_handle_tPtr]],
     "UG_statvfs": ["int", [UG_statePtr, statvfsPtr]],
     // high-level directory data API
     "UG_opendir": [UG_handle_tPtr, [UG_statePtr, "string", intPtr]],
@@ -355,6 +364,25 @@ var libsyndicate_ug = newLibrary('/usr/local/lib/libsyndicate-ug', {
     "UG_getxattr": ["int", [UG_statePtr, "string", "string", "string", "size_t"]],
     "UG_listxattr": ["int", [UG_statePtr, "string", "string", "size_t"]],
     "UG_removexattr": ["int", [UG_statePtr, "string", "string"]],
+    //////////////////////////////
+    // FROM libsyndicate-ug/consistency.h
+    //////////////////////////////
+    // go fetch an inode directoy from the MS
+    "UG_consistency_inode_download": ["int", [SG_gatewayPtr, "uint64", md_entryPtr]],
+    // get the manifest from one of a list of gateways
+    //int UG_consistency_manifest_download( struct SG_gateway* gateway, struct SG_request_data* reqdat, uint64_t coordinator_id, uint64_t* gateway_ids, size_t num_gateway_ids, struct SG_manifest* manifest );
+    // reload the path's-worth of metadata
+    "UG_consistency_path_ensure_fresh": ["int", [SG_gatewayPtr, "string"]],
+    // reload a directory's children
+    "UG_consistency_dir_ensure_fresh": ["int", [SG_gatewayPtr, "string"]],
+    // reload an inode's manifest
+    "UG_consistency_manifest_ensure_fresh": ["int", [SG_gatewayPtr, "string"]],
+    // fetch the xattrs for an inode
+    //int UG_consistency_fetchxattrs( struct SG_gateway* gateway, uint64_t file_id, int64_t xattr_nonce, unsigned char* xattr_hash, fskit_xattr_set** ret_xattrs );
+    // ensure a locally-cached inode is fresh
+    //int UG_consistency_inode_ensure_fresh( struct SG_gateway* gateway, char const* fs_path, struct UG_inode* inode );
+    // ask a remote gateway to refresh its inode
+    "UG_consistency_request_refresh": ["int", [SG_gatewayPtr, "string"]],
 });
 
 /**
@@ -364,6 +392,12 @@ module.exports = {
     libsyndicate: libsyndicate,
     libsyndicate_ug: libsyndicate_ug,
     helpers: {
+        create_stat: function() {
+            return new stat();
+        },
+        create_stat_ptr: function() {
+            return ref.alloc(statPtr);
+        },
         create_md_entry: function() {
             return new md_entry();
         },
@@ -382,6 +416,9 @@ module.exports = {
         create_integer: function() {
             return ref.alloc("int");
         },
+        create_uint64: function() {
+            return ref.alloc("uint64");
+        }
     },
     constants: {
         MD_ENTRY_FILE: MD_ENTRY_FILE,
@@ -397,4 +434,3 @@ module.exports = {
         XATTR_REPLACE: 2,
     }
 };
-

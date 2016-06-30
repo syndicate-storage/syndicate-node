@@ -110,20 +110,98 @@ module.exports = {
         }
 
         // shutdown UG
-        libsyndicate_ug.UG_shutdown( ug );
+        libsyndicate_ug.UG_shutdown(ug);
     },
-    // get gateway
-    state_gateway: function(ug) {
+    // get gateway id
+    get_gateway_id: function(ug) {
         if(!ug) {
             throw new Error("Invalid arguments");
         }
 
-        // shutdown UG
-        var gateway = libsyndicate_ug.UG_state_gateway( ug );
+        // state gateway
+        var gateway = libsyndicate_ug.UG_state_gateway(ug);
         if(gateway.isNull()) {
             throw new Error("UG_state_gateway failed");
         }
-        return gateway;
+
+        // get gateway id
+        var gid = libsyndicate.SG_gateway_id(gateway);
+        return gid;
+    },
+    // refresh
+    refresh: function(ug, path) {
+        if(!ug) {
+            throw new Error("Invalid arguments");
+        }
+
+        if(!path) {
+            throw new Error("Invalid arguments");
+        }
+
+        // state gateway
+        var gateway = libsyndicate_ug.UG_state_gateway(ug);
+        if(gateway.isNull()) {
+            throw new Error("UG_state_gateway failed");
+        }
+
+        var rc = syndicate.consistency_path_ensure_fresh(gateway, path);
+        if(rc === 0) {
+            rc = syndicate.UG_consistency_request_refresh(gateway, path);
+        }
+
+        if(rc !== 0) {
+            throw posixerr.create_error("Failed to refresh '" + path + "'", -rc);
+        }
+    },
+    // stat
+    stat: function(ug, path) {
+        if(!ug) {
+            throw new Error("Invalid arguments");
+        }
+
+        if(!path) {
+            throw new Error("Invalid arguments");
+        }
+
+        var entry = libsyndicate_node.helpers.create_stat();
+        // load up...
+        var rc = libsyndicate_ug.UG_stat(ug, path, entry.ref());
+        if(rc !== 0) {
+            throw posixerr.create_error("Failed to stat '" + path + "'", -rc);
+        }
+
+        var statEntry = JSON.parse(JSON.stringify(entry));
+        return statEntry;
+    },
+    // stat async
+    stat_async: function(ug, path, callback) {
+        if(!ug) {
+            callback(new Error("Invalid arguments"), null);
+            return;
+        }
+
+        if(!path) {
+            callback(new Error("Invalid arguments"), null);
+            return;
+        }
+
+        var entry = libsyndicate_node.helpers.create_stat();
+        // load up...
+        libsyndicate_ug.UG_stat.async(ug, path, entry.ref(), function(err, rc) {
+            if(err) {
+                callback(err, null);
+                return;
+            }
+
+            if(rc !== 0) {
+                callback(posixerr.create_error("Failed to stat '" + path + "'", -rc), null);
+                return;
+            }
+
+            var statEntry = JSON.parse(JSON.stringify(entry));
+            callback(null, statEntry);
+            return;
+        });
     },
     // stat-raw
     stat_raw: function(ug, path) {
@@ -1073,6 +1151,53 @@ module.exports = {
             }
 
             callback(null, null);
+            return;
+        });
+    },
+    // chcoord
+    chcoord: function(ug, path) {
+        if(!ug) {
+            throw new Error("Invalid arguments");
+        }
+
+        if(!path) {
+            throw new Error("Invalid arguments");
+        }
+
+        // chcoord
+        var new_coord = libsyndicate_node.helpers.create_uint64();
+        var rc = libsyndicate_ug.UG_chcoord(ug, path, new_coord);
+        if(rc !== 0) {
+            throw posixerr.create_error("Failed to chcoord '" + path + "'", -rc);
+        }
+        return new_coord.deref();
+    },
+    // chcoord async.
+    chcoord_async: function(ug, path, callback) {
+        if(!ug) {
+            callback(new Error("Invalid arguments"), null);
+            return;
+        }
+
+        if(!path) {
+            callback(new Error("Invalid arguments"), null);
+            return;
+        }
+
+        // chcoord
+        var new_coord = libsyndicate_node.helpers.create_uint64();
+        libsyndicate_ug.UG_chcoord.async(ug, path, new_coord, function(err, rc) {
+            if(err) {
+                callback(err, null);
+                return;
+            }
+
+            if(rc !== 0) {
+                callback(posixerr.create_error("Failed to chcoord '" + path + "'", -rc), null);
+                return;
+            }
+
+            callback(null, new_coord.deref());
             return;
         });
     },
