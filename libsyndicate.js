@@ -217,6 +217,10 @@ var md_entryPtrPtrPtr = ref.refType(md_entryPtrPtr);
 var MD_ENTRY_FILE = 1;
 var MD_ENTRY_DIRECTORY = 2;
 
+var UG_vacuum_contextPtr = ref.refType("void");
+var UG_vacuum_contextPtrPtr = ref.refType(UG_vacuum_contextPtr);
+
+
 // from node-ffi source code
 function newLibrary (libfile, funcs, lib) {
     if (libfile && libfile.indexOf(ffi.LIB_EXT) === -1) {
@@ -351,6 +355,9 @@ var libsyndicate_ug = newLibrary('/usr/local/lib/libsyndicate-ug', {
     "UG_ftruncate": ["int", [UG_statePtr, off_t, UG_handle_tPtr]],
     "UG_fstat": ["int", [UG_statePtr, statPtr, UG_handle_tPtr]],
     "UG_statvfs": ["int", [UG_statePtr, statvfsPtr]],
+    // low-level file data API
+    "UG_vacuum_begin": ["int", [UG_statePtr, "string", UG_vacuum_contextPtrPtr]],
+    "UG_vacuum_wait": ["int", [UG_vacuum_contextPtr]],
     // high-level directory data API
     "UG_opendir": [UG_handle_tPtr, [UG_statePtr, "string", intPtr]],
     "UG_readdir": ["int", [UG_statePtr, md_entryPtrPtrPtr, "size_t", UG_handle_tPtr]],
@@ -406,6 +413,12 @@ module.exports = {
         },
         create_md_entry_ptr_ptr: function() {
             return ref.alloc(md_entryPtrPtr);
+        },
+        create_UG_vacuum_context_ptr: function() {
+            return ref.alloc(UG_vacuum_contextPtr);
+        },
+        create_UG_vacuum_context_ptr_ptr: function() {
+            return ref.alloc(UG_vacuum_contextPtrPtr);
         },
         create_statvfs: function() {
             return new statvfs();

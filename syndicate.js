@@ -144,13 +144,41 @@ module.exports = {
             throw new Error("UG_state_gateway failed");
         }
 
-        var rc = syndicate.consistency_path_ensure_fresh(gateway, path);
+        var rc = libsyndicate_ug.UG_consistency_path_ensure_fresh(gateway, path);
         if(rc === 0) {
-            rc = syndicate.UG_consistency_request_refresh(gateway, path);
+            rc = libsyndicate_ug.UG_consistency_request_refresh(gateway, path);
         }
 
         if(rc !== 0) {
             throw posixerr.create_error("Failed to refresh '" + path + "'", -rc);
+        }
+    },
+    // vacuum_begin
+    vacuum_begin: function(ug, path) {
+        if(!ug) {
+            throw new Error("Invalid arguments");
+        }
+
+        if(!path) {
+            throw new Error("Invalid arguments");
+        }
+
+        var vctx = libsyndicate_node.helpers.create_UG_vacuum_context_ptr();
+        var rc = libsyndicate_ug.UG_vacuum_begin(ug, path, vctx);
+        if(rc !== 0) {
+            throw posixerr.create_error("Failed to vacuum_begin '" + path + "'", -rc);
+        }
+        return vctx.deref();
+    },
+    // vacuum_wait
+    vacuum_wait: function(vctx) {
+        if(!vctx) {
+            throw new Error("Invalid arguments");
+        }
+
+        var rc = libsyndicate_ug.UG_vacuum_wait(vctx);
+        if(rc !== 0) {
+            throw posixerr.create_error("Failed to vacuum_wait", -rc);
         }
     },
     // stat
