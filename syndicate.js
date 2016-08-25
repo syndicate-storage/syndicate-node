@@ -671,7 +671,7 @@ module.exports = {
                                         return;
                                     }
                                 },
-                                function(cb, fh) {
+                                function(fh, cb) {
                                     if(seek_to_end) {
                                         // SEEK
                                         libsyndicate_ug.UG_seek.async(fh, 0, libsyndicate_node.constants.SEEK_END, function(err, new_offset) {
