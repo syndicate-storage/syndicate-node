@@ -462,8 +462,10 @@ module.exports = {
             throw new Error("Invalid arguments");
         }
 
-        // get mask
-        mode = mode || (process.umask() & 0o0777);
+        if(mode === undefined) {
+            // get mask
+            mode = ((~process.umask()) & 0o0777);
+        }
 
         var rc2 = libsyndicate_node.helpers.create_integer();
         var fh = libsyndicate_ug.UG_create(ug, path, mode, rc2);
@@ -485,8 +487,10 @@ module.exports = {
             return;
         }
 
-        // get mask
-        mode = mode || (process.umask() & 0o0777);
+        if(mode === undefined) {
+            // get mask
+            mode = ((~process.umask()) & 0o0777);
+        }
 
         var rc2 = libsyndicate_node.helpers.create_integer();
         libsyndicate_ug.UG_create.async(ug, path, mode, rc2, function(err, fh) {
@@ -1283,8 +1287,10 @@ module.exports = {
             throw new Error("Invalid arguments");
         }
 
-        // get mask
-        mode = mode || (process.umask() & 0o0777);
+        if(mode === undefined) {
+            // get mask
+            mode = ((~process.umask()) & 0o0777);
+        }
 
         // mkdir
         var rc = libsyndicate_ug.UG_mkdir(ug, path, mode);
@@ -1304,8 +1310,10 @@ module.exports = {
             return;
         }
 
-        // get mask
-        mode = mode || (process.umask() & 0o0777);
+        if(mode === undefined) {
+            // get mask
+            mode = ((~process.umask()) & 0o0777);
+        }
 
         // mkdir
         libsyndicate_ug.UG_mkdir.async(ug, path, mode, function(err, rc) {
