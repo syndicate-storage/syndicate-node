@@ -716,6 +716,9 @@ module.exports = {
                         });
                     }
                 }
+
+                callback(err, fh);
+                return;
             });
         } else {
             libsyndicate_ug.UG_open.async(ug, path, flag, rc2, function(err, fh) {
