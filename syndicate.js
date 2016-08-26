@@ -715,10 +715,10 @@ module.exports = {
                             });
                         });
                     }
+                } else {
+                    callback(err, fh);
+                    return;
                 }
-
-                callback(err, fh);
-                return;
             });
         } else {
             libsyndicate_ug.UG_open.async(ug, path, flag, rc2, function(err, fh) {
@@ -730,10 +730,10 @@ module.exports = {
                 if(rc2.deref() !== 0) {
                     callback(posixerr.create_error("Failed to open a file '" + path + "'", -rc2.deref()), null);
                     return;
+                } else {
+                    callback(err, fh);
+                    return;
                 }
-
-                callback(err, fh);
-                return;
             });
         }
     },
