@@ -21,6 +21,7 @@
 var ref = require('ref');
 var ffi = require('ffi');
 var Struct = require('ref-struct');
+var Union = require('ref-union');
 var ArrayType = require('ref-array');
 
 // Premitive data types
@@ -159,23 +160,20 @@ var md_opts = Struct({
 });
 var md_optsPtr = ref.refType(md_opts);
 
-/*
+var fskit_file_handlePtr = ref.refType("void");
+var fskit_dir_handlePtr = ref.refType("void");
+
+var UG_handle_t_inner_ptr = Union({
+  fh: fskit_file_handlePtr,
+  dh: fskit_file_handlePtr
+});
+
 var UG_handle_t = Struct({
-    "type": "int",
+    "type": "int32",
     "offset": off_t,
-    Union({
-        "fh": "pointer",
-        "dh": "pointer"
-    })
-    //union {
-    //  struct fskit_file_handle* fh;
-    //  struct fskit_dir_handle* dh;
-    //};
+    "handle":  UG_handle_t_inner_ptr
 });
 var UG_handle_tPtr = ref.refType(UG_handle_t);
-*/
-var UG_handle_tPtr = ref.refType("void");
-
 
 var md_entry = Struct({
     "type": "int", // file or directory?

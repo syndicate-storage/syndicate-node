@@ -42,6 +42,25 @@ function addRawStatHelpers(entry) {
     };
 }
 
+function stringfyHandle(fh) {
+    if(fh) {
+        var handle = fh.deref();
+        var type = handle.type;
+        var off = handle.offset;
+        var addr = null;
+        if(type == 0) {
+            // directory
+            addr = handle.handle.fh;
+        } else {
+            // file
+            addr = handle.handle.dh;
+        }
+
+        return "Type(" + type + ")" + ", Off(" + off + ")" + ", Addr(" + addr + ")";
+    }
+    return "null";
+}
+
 /**
  * Expose root class
  */
@@ -749,7 +768,7 @@ module.exports = {
 
         var rc = libsyndicate_ug.UG_close(ug, fh);
         if(rc !== 0) {
-            throw posixerr.create_error("Failed to close a file '" + fh + "'", -rc);
+            throw posixerr.create_error("Failed to close a file '" + stringfyHandle(fh) + "'", -rc);
         }
     },
     // close async.
@@ -771,7 +790,7 @@ module.exports = {
             }
 
             if(rc !== 0) {
-                callback(posixerr.create_error("Failed to close a file '" + fh + "'", -rc), null);
+                callback(posixerr.create_error("Failed to close a file '" + stringfyHandle(fh) + "'", -rc), null);
                 return;
             }
 
@@ -791,7 +810,7 @@ module.exports = {
 
         var rc = libsyndicate_ug.UG_fsync(ug, fh);
         if(rc !== 0) {
-            throw posixerr.create_error("Failed to sync a file '" + fh + "'", -rc);
+            throw posixerr.create_error("Failed to sync a file '" + stringfyHandle(fh) + "'", -rc);
         }
     },
     // fsync async
@@ -813,7 +832,7 @@ module.exports = {
             }
 
             if(rc !== 0) {
-                callback(posixerr.create_error("Failed to sync a file '" + fh + "'", -rc), null);
+                callback(posixerr.create_error("Failed to sync a file '" + stringfyHandle(fh) + "'", -rc), null);
                 return;
             }
 
@@ -838,7 +857,7 @@ module.exports = {
         // SEEK
         var new_offset = libsyndicate_ug.UG_seek(fh, offset, libsyndicate_node.constants.SEEK_SET);
         if(new_offset < 0) {
-            throw posixerr.create_error("Failed to seek a file '" + fh + "'", -new_offset);
+            throw posixerr.create_error("Failed to seek a file '" + stringfyHandle(fh) + "'", -new_offset);
         }
         return new_offset;
     },
@@ -867,7 +886,7 @@ module.exports = {
             }
 
             if(new_offset < 0) {
-                callback(posixerr.create_error("Failed to seek a file '" + fh + "'", -new_offset), null);
+                callback(posixerr.create_error("Failed to seek a file '" + stringfyHandle(fh) + "'", -new_offset), null);
                 return;
             }
 
@@ -909,7 +928,7 @@ module.exports = {
         while(size_left > 0) {
             var size_read = libsyndicate_ug.UG_read(ug, read_buf, size_left, fh);
             if(size_read < 0) {
-                throw posixerr.create_error("Failed to read a file '" + fh + "'", -size_read);
+                throw posixerr.create_error("Failed to read a file '" + stringfyHandle(fh) + "'", -size_read);
             } else if(size_read === 0) {
                 // EOF
                 break;
@@ -971,7 +990,7 @@ module.exports = {
 
                     if(size_read < 0) {
                         stopWhile = true;
-                        loop_cb(posixerr.create_error("Failed to read a file '" + fh + "'", -size_read), null);
+                        loop_cb(posixerr.create_error("Failed to read a file '" + stringfyHandle(fh) + "'", -size_read), null);
                         return;
                     } else if(size_read === 0) {
                         // EOF
@@ -1018,7 +1037,7 @@ module.exports = {
         while(size_left > 0) {
             var size_write = libsyndicate_ug.UG_write(ug, buf, size_left, fh);
             if(size_write < 0) {
-                throw posixerr.create_error("Failed to write a file '" + fh + "'", -size_write);
+                throw posixerr.create_error("Failed to write a file '" + stringfyHandle(fh) + "'", -size_write);
             } else {
                 size_left -= size_write;
                 size_write_total += size_write;
@@ -1062,7 +1081,7 @@ module.exports = {
 
                     if(size_write < 0) {
                         stopWhile = true;
-                        loop_cb(posixerr.create_error("Failed to write a file '" + fh + "'", -size_write), null);
+                        loop_cb(posixerr.create_error("Failed to write a file '" + stringfyHandle(fh) + "'", -size_write), null);
                         return;
                     } else {
                         size_left -= size_write;

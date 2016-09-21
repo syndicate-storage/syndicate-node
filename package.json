@@ -27,6 +27,7 @@
     "ref": "latest",
     "ffi": "latest",
     "ref-struct": "latest",
+    "ref-union": "latest",
     "ref-array": "latest",
     "async": "latest"
   },
