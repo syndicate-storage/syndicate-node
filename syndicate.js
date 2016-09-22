@@ -840,6 +840,52 @@ module.exports = {
             return;
         });
     },
+    // tell
+    tell: function(ug, fh) {
+        if(!ug) {
+            throw new Error("Invalid arguments");
+        }
+
+        if(!fh) {
+            throw new Error("Invalid arguments");
+        }
+
+        // TELL
+        var offset = 0;
+        var handle = fh.deref();
+
+        offset = handle.offset;
+        if(offset >= 0) {
+            return offset;
+        } else {
+            throw posixerr.create_error("Failed to tell a file '" + stringfyHandle(fh) + "'", 9); // EBADF
+        }
+    },
+    // tell async.
+    tell_async: function(ug, fh, callback) {
+        if(!ug) {
+            callback(new Error("Invalid arguments"), null);
+            return;
+        }
+
+        if(!fh) {
+            callback(new Error("Invalid arguments"), null);
+            return;
+        }
+
+        // seek
+        var offset = 0;
+        var handle = fh.deref();
+
+        offset = handle.offset;
+        if(offset >= 0) {
+            callback(null, offset);
+            return;
+        } else {
+            callback(posixerr.create_error("Failed to tell a file '" + stringfyHandle(fh) + "'", 9), null); // EBADF
+            return;
+        }
+    },
     // seek
     seek: function(ug, fh, offset) {
         if(!ug) {
