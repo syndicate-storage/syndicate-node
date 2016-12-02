@@ -116,7 +116,7 @@ module.exports = {
             args.push("-d" + opts.debug_level);
         }
 
-        var ug = libsyndicate_ug.UG_init(args.length, args, opts.anonymous);
+        var ug = libsyndicate_ug.UG_init(args.length, args);
         if(ug.isNull()) {
             throw new Error("UG_init failed");
         }

@@ -283,7 +283,7 @@ var libsyndicate_ug = newLibrary('/usr/local/lib/libsyndicate-ug', {
     "UG_state_wlock": ["int", [UG_statePtr]],
     "UG_state_unlock": ["int", [UG_statePtr]],
     // core init and shutdown
-    "UG_init": [UG_statePtr, ["int", stringArr, "bool"]],
+    "UG_init": [UG_statePtr, ["int", stringArr]],
     "UG_init_ex": [UG_statePtr, ["int", stringArr, md_optsPtr, "pointer"]],
     "UG_start": ["int", [UG_statePtr]],
     "UG_main": ["int", [UG_statePtr]],
