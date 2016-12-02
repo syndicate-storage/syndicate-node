@@ -90,7 +90,7 @@ module.exports = {
         // build syndicate arguments
         var args=[];
         // program name:
-        args.push("libsyndicate-node.js");
+        args.push("syndicate.js");
 
         // user: -u flag
         if(opts.user !== "") {
