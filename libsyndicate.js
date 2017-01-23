@@ -91,9 +91,11 @@ var O_WRONLY = 1;
 var O_RDWR = 2;
 
 // SG gateway
+// defined in libsyndicate/gateawy.h
 var SG_gatewayPtr = ref.refType("void");
 
 // global UG state
+// defined in libsyndicte-ug/core.cpp
 var UG_state = Struct({
     "gateway": SG_gatewayPtr,              // reference to the gateway core (which, in turn, points to UG_state)
 
@@ -133,6 +135,7 @@ var UG_state = Struct({
 });
 var UG_statePtr = ref.refType(UG_state);
 
+// defined in libsyndicate/private/opts.h
 var md_opts = Struct({
     //char* config_file;
     "config_file": "string",

@@ -66,18 +66,16 @@ function stringfyHandle(fh) {
  */
 module.exports = {
     // create init opts
-    create_opts: function(user, volume, gateway, anonymous, debug_level) {
+    create_opts: function(user, volume, gateway, debug_level) {
         user = user || "";
         volume = volume || "";
         gateway = gateway || "";
-        anonymous = anonymous || false;
         debug_level = debug_level || 0;
 
         return {
             user: user,
             volume: volume,
             gateway: gateway,
-            anonymous: anonymous,
             debug_level: debug_level
         };
     },
@@ -106,10 +104,6 @@ module.exports = {
         if(opts.gateway !== "") {
             args.push("-g");
             args.push(opts.gateway);
-        }
-        // anonymous: -a flag
-        if(opts.anonymous) {
-            args.push("-A");
         }
         // debug_level: -d flag
         if(opts.debug_level != 0) {
