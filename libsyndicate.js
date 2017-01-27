@@ -282,8 +282,8 @@ function newLibrary (libfile, funcs, lib) {
     return lib
 }
 
-var fskit = newLibrary('libfskit');
-var libsyndicate = newLibrary('libsyndicate', {
+var fskit = newLibrary('libfskit.so.1');
+var libsyndicate = newLibrary('libsyndicate.so.1', {
     //////////////////////////////
     // FROM libsyndicate/libsyndicate.h
     //////////////////////////////
@@ -295,7 +295,7 @@ var libsyndicate = newLibrary('libsyndicate', {
     "SG_gateway_user_id": ["uint64", [SG_gatewayPtr]],
     "SG_gateway_first_arg_optind": ["int", [SG_gatewayPtr]],
 });
-var libsyndicate_ug = newLibrary('libsyndicate-ug', {
+var libsyndicate_ug = newLibrary('libsyndicate-ug.so.1', {
     //////////////////////////////
     // FROM libsyndicate-ug/core.h
     //////////////////////////////
