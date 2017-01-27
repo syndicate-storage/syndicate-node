@@ -232,14 +232,16 @@ function findLibrary (libfile) {
         return null;
     }
     
-    library_dir_candidates.forEach(function (elem) {
-        ent_arr = fs.readdirSync(elem);
-        ent_arr.forEach(function (ent) {
+    for(var i=0;i<library_dir_candidates.length;i++) {
+        var candidate = library_dir_candidates[i];
+        ent_arr = fs.readdirSync(candidate);
+        for(var j=0;j<ent_arr.length;j++) {
+            var ent = ent_arr[j];
             if(ent === libfile || ent.startsWith(libfile + ".")) {
-                return elem + "/" + ent;
+                return candidate + "/" + libfile;
             }
-        });
-    });
+        }
+    }
     return "./" + libfile;
 }
 
