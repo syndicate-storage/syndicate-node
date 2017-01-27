@@ -23,6 +23,7 @@ var ffi = require('ffi');
 var Struct = require('ref-struct');
 var Union = require('ref-union');
 var ArrayType = require('ref-array');
+var fs = require('fs');
 
 // Premitive data types
 var off_t = "int64";
@@ -221,15 +222,39 @@ var MD_ENTRY_DIRECTORY = 2;
 var UG_vacuum_contextPtr = ref.refType("void");
 var UG_vacuum_contextPtrPtr = ref.refType(UG_vacuum_contextPtr);
 
+var library_dir_candidates = [
+    '/usr/lib',
+    '/usr/local/lib'
+];
+
+function findLibrary (libfile) {
+    if (!libfile) {
+        return null;
+    }
+    
+    library_dir_candidates.forEach(function (elem) {
+        ent_arr = fs.readdirSync(elem);
+        ent_arr.forEach(function (ent) {
+            if(ent === libfile || ent.startsWith(libfile + ".")) {
+                return elem + "/" + ent;
+            }
+        });
+    });
+    return "./" + libfile;
+}
 
 // from node-ffi source code
 function newLibrary (libfile, funcs, lib) {
     if (libfile && libfile.indexOf(ffi.LIB_EXT) === -1) {
         libfile += ffi.LIB_EXT
     }
+    
+    libfile = findLibrary(libfile);
+    
     if (!lib) {
         lib = {}
     }
+    
     var mode = ffi.DynamicLibrary.FLAGS.RTLD_NOW | ffi.DynamicLibrary.FLAGS.RTLD_GLOBAL;
     var dl = new ffi.DynamicLibrary(libfile || null, mode)
     Object.keys(funcs || {}).forEach(function (func) {
@@ -255,8 +280,8 @@ function newLibrary (libfile, funcs, lib) {
     return lib
 }
 
-var fskit = newLibrary('/usr/local/lib/libfskit');
-var libsyndicate = newLibrary('/usr/local/lib/libsyndicate', {
+var fskit = newLibrary('libfskit');
+var libsyndicate = newLibrary('libsyndicate', {
     //////////////////////////////
     // FROM libsyndicate/libsyndicate.h
     //////////////////////////////
@@ -268,7 +293,7 @@ var libsyndicate = newLibrary('/usr/local/lib/libsyndicate', {
     "SG_gateway_user_id": ["uint64", [SG_gatewayPtr]],
     "SG_gateway_first_arg_optind": ["int", [SG_gatewayPtr]],
 });
-var libsyndicate_ug = newLibrary('/usr/local/lib/libsyndicate-ug', {
+var libsyndicate_ug = newLibrary('libsyndicate-ug', {
     //////////////////////////////
     // FROM libsyndicate-ug/core.h
     //////////////////////////////
