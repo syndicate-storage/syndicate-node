@@ -1,4 +1,4 @@
-#!/bin/env node
+#!/usr/bin/env node
 /*
    Copyright 2016 The Trustees of University of Arizona
 

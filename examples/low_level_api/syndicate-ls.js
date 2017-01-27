@@ -1,4 +1,4 @@
-#!/bin/env node
+#!/usr/bin/env node
 /*
    Copyright 2015 The Trustees of Princeton University
 
