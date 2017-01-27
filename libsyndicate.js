@@ -227,22 +227,70 @@ var library_dir_candidates = [
     '/usr/local/lib'
 ];
 
+function getVersions (libfile) {
+    var loc = libfile.indexOf(ffi.LIB_EXT);
+    loc += ffi.LIB_EXT.length + 1;
+    if(loc < libfile.length) {
+        var version_part = libfile.substring(loc);
+        var vv = version_part.split(".");
+        
+        var versions = [];
+        for(var i=0;i<vv.length;i++) {
+            versions.push(Number(vv[i]));
+        }
+        return versions;
+    }
+    
+    return [0];
+}
+
+function findHighestVersion (libfiles) {
+    // find highest version of the library
+    var highest = libfiles[0];
+    var highest_ver = getVersions(libfiles[0]);
+    for(var i=0;i<libfiles.length;i++) {
+        var libfile = libfiles[i];
+        var versions = getVersions(libfile);
+        
+        for(var j=0;j<Math.min(highest_ver.length, versions.length);j++) {
+            if(highest_ver[j] < versions[j]) {
+                highest = libfile;
+                var highest_ver = getVersions(libfile);
+                break;
+            }
+        }
+    }
+    
+    return highest;
+}
+
 function findLibrary (libfile) {
     if (!libfile) {
         return null;
     }
     
+    var lib_cadidates = [];
     for(var i=0;i<library_dir_candidates.length;i++) {
         var candidate = library_dir_candidates[i];
         ent_arr = fs.readdirSync(candidate);
         for(var j=0;j<ent_arr.length;j++) {
             var ent = ent_arr[j];
-            if(ent === libfile || ent.startsWith(libfile + ".")) {
+            if(ent === libfile) {
+                // best match
                 return candidate + "/" + libfile;
+            } else if(ent.startsWith(libfile + ".")) {
+                lib_cadidates.push(candidate + "/" + ent);
             }
         }
     }
-    return "./" + libfile;
+    
+    if(lib_cadidates.length == 1) {
+        return lib_cadidates[0];
+    } else if(lib_cadidates.length > 1) {
+        return findHighestVersion(lib_cadidates);
+    } else {
+        return "./" + libfile;
+    }
 }
 
 // from node-ffi source code
@@ -282,8 +330,8 @@ function newLibrary (libfile, funcs, lib) {
     return lib
 }
 
-var fskit = newLibrary('libfskit.so.1');
-var libsyndicate = newLibrary('libsyndicate.so.1', {
+var fskit = newLibrary('libfskit.so');
+var libsyndicate = newLibrary('libsyndicate.so', {
     //////////////////////////////
     // FROM libsyndicate/libsyndicate.h
     //////////////////////////////
@@ -295,7 +343,7 @@ var libsyndicate = newLibrary('libsyndicate.so.1', {
     "SG_gateway_user_id": ["uint64", [SG_gatewayPtr]],
     "SG_gateway_first_arg_optind": ["int", [SG_gatewayPtr]],
 });
-var libsyndicate_ug = newLibrary('libsyndicate-ug.so.1', {
+var libsyndicate_ug = newLibrary('libsyndicate-ug.so', {
     //////////////////////////////
     // FROM libsyndicate-ug/core.h
     //////////////////////////////
