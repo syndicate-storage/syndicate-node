@@ -66,17 +66,19 @@ function stringfyHandle(fh) {
  */
 module.exports = {
     // create init opts
-    create_opts: function(user, volume, gateway, debug_level) {
+    create_opts: function(user, volume, gateway, debug_level, config_path) {
         user = user || "";
         volume = volume || "";
         gateway = gateway || "";
         debug_level = debug_level || 0;
+        config_path = config_path || "";
 
         return {
             user: user,
             volume: volume,
             gateway: gateway,
-            debug_level: debug_level
+            debug_level: debug_level,
+            config_path: config_path,
         };
     },
     // initialize UG
@@ -90,6 +92,11 @@ module.exports = {
         // program name:
         args.push("syndicate.js");
 
+        // config_path: -c flag
+        if(opts.config_path !== "") {
+            args.push("-c");
+            args.push(opts.config_path);
+        }
         // user: -u flag
         if(opts.user !== "") {
             args.push("-u");
