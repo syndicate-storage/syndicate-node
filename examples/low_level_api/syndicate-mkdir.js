@@ -51,7 +51,7 @@ var posixerr = require('../../posix_errors.js');
         for(i=path_optind;i<args.length;i++) {
             var path = args[i];
             var rc = 0;
-            var um = ~process.umask() & 0o0777;
+            var um = ~process.umask() & parseInt("0777", 8);
 
             // try to mkdir
             rc = UG_mkdir( ug, path, um );

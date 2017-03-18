@@ -484,7 +484,7 @@ module.exports = {
 
         if(mode === undefined) {
             // get mask
-            mode = ((~process.umask()) & 0o0777);
+            mode = ((~process.umask()) & parseInt("0777", 8));
         }
 
         var rc2 = libsyndicate_node.helpers.create_integer();
@@ -509,7 +509,7 @@ module.exports = {
 
         if(mode === undefined) {
             // get mask
-            mode = ((~process.umask()) & 0o0777);
+            mode = ((~process.umask()) & parseInt("0777", 8));
         }
 
         var rc2 = libsyndicate_node.helpers.create_integer();
@@ -564,7 +564,7 @@ module.exports = {
         var rc2 = libsyndicate_node.helpers.create_integer();
         var fh;
         if(create) {
-            fh = libsyndicate_ug.UG_create(ug, path, 0o0540, rc2);
+            fh = libsyndicate_ug.UG_create(ug, path, parseInt("0540", 8), rc2);
             if(rc2.deref() !== 0) {
                 if(rc2.deref() !== -17) {
                     // Not EEXIST
@@ -642,7 +642,7 @@ module.exports = {
         var rc = 0;
         var rc2 = libsyndicate_node.helpers.create_integer();
         if(create) {
-            libsyndicate_ug.UG_create.async(ug, path, 0o0540, rc2, function(err, fh) {
+            libsyndicate_ug.UG_create.async(ug, path, parseInt("0540", 8), rc2, function(err, fh) {
                 if(err) {
                     callback(err, null);
                     return;
@@ -1358,7 +1358,7 @@ module.exports = {
 
         if(mode === undefined) {
             // get mask
-            mode = ((~process.umask()) & 0o0777);
+            mode = ((~process.umask()) & parseInt("0777", 8));
         }
 
         // mkdir
@@ -1381,7 +1381,7 @@ module.exports = {
 
         if(mode === undefined) {
             // get mask
-            mode = ((~process.umask()) & 0o0777);
+            mode = ((~process.umask()) & parseInt("0777", 8));
         }
 
         // mkdir
