@@ -1,10 +1,10 @@
 {
-  "name": "syndicate-drive",
+  "name": "syndicate-storage",
   "version": "0.2.5",
-  "description": "A node.js binding for Syndicate drive",
+  "description": "A node.js binding for Syndicate storage",
   "keywords": [
     "syndicate",
-    "syndicate-drive",
+    "syndicate-storage",
     "fs",
     "filesystem"
   ],
